@@ -5,8 +5,16 @@ enum UserRole { coach, student }
 class AuthService {
   final supabase = Supabase.instance.client;
 
-  Future<AuthResponse> signIn(String email, String password) {
-    return supabase.auth.signInWithPassword(email: email, password: password);
+  Future<String?> signIn(String email, String password) async {
+    final response = await supabase.auth.signInWithPassword(email: email, password: password);
+    final user = response.user;
+    if (user == null) {
+      throw Exception('User not found');
+    }
+
+    final role = user.userMetadata?['role'] as String?;
+    if (role == null) throw Exception('No role found for user');
+    return role;
   }
 
   // Need to create user table in Supabase with corresponding columns
@@ -17,7 +25,7 @@ class AuthService {
   required String fullName,
   required UserRole role,
   }) async {
-    final response = await Supabase.instance.client.auth.signUp(
+    final response = await supabase.auth.signUp(
       email: email,
       password: password,
       data: {
@@ -26,19 +34,24 @@ class AuthService {
       },
     );
 
+    final session = response.session;
     final userId = response.user?.id;
-    if (userId == null) throw Exception('No user ID returned');
-
-    final table = role == UserRole.coach ? 'coaches' : 'students';
-
-    await Supabase.instance.client.from(table).insert({
+    print(session);
+    print(userId);
+    if (session == null) {
+      throw Exception('User registration failed: No active session');
+    }
+    if (userId == null) {
+      throw Exception('User registration failed: No user ID');
+    }
+    final insertResponse = await supabase.from('users').insert({
       'id': userId,
       'full_name': fullName,
+      'role': role.name,
     });
 
-    return response;
+    return insertResponse;
   }
-
 
   Future<void> signOut() async {
     await supabase.auth.signOut();
