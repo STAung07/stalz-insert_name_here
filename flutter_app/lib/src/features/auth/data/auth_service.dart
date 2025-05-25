@@ -19,7 +19,7 @@ class AuthService {
 
   // Need to create user table in Supabase with corresponding columns
   // and set up RLS policies to allow only the user to access their own data
-  Future<AuthResponse> register({
+  Future<dynamic> register({
   required String email,
   required String password,
   required String fullName,
@@ -36,21 +36,35 @@ class AuthService {
 
     final session = response.session;
     final userId = response.user?.id;
+
+    print("Session:");
     print(session);
+    print("User ID:");
     print(userId);
-    if (session == null) {
-      throw Exception('User registration failed: No active session');
-    }
-    if (userId == null) {
-      throw Exception('User registration failed: No user ID');
-    }
-    final insertResponse = await supabase.from('users').insert({
+
+    await supabase.from('users').insert({
       'id': userId,
       'full_name': fullName,
       'role': role.name,
     });
-
+    final insertResponse = await supabase.
+      from('users').
+      select('id')
+      .eq('id', userId)
+      .single();
+    print("Insert Response:");
+    print(insertResponse);
     return insertResponse;
+  }
+
+
+  Future<bool> isEmailVerified() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return false;
+
+    // Refresh the user to get the latest email verification status
+    await supabase.auth.refreshSession();
+    return user.emailConfirmedAt != null; // Check if email is verified
   }
 
   Future<void> signOut() async {

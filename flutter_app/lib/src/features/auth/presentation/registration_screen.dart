@@ -30,12 +30,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() => loading = true);
     try {
       UserRole role = selectedRole == 'coach' ? UserRole.coach : UserRole.student;
-      await auth.register(
+      final registerResponse = await auth.register(
         email: emailController.text,
         password: passwordController.text,
         fullName: fullNameController.text,
         role: role, // Pass the selected role
       );
+      print("Registration Response:");
+      print(registerResponse);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration successful! Please log in.')),
       );

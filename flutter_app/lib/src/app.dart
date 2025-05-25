@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/registration_screen.dart';
 import 'features/dashboard/presentation/dashboard_screen.dart';
