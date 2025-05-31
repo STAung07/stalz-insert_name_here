@@ -23,7 +23,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     });
 
     try {
-      await AuthService().resendVerificationEmail(widget.email!);
+      await auth.resendVerificationEmail(widget.email!);
       setState(() {
         _statusMessage = 'Verification email sent!';
       });
@@ -43,25 +43,43 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
             Text(
-              'A verification link has been sent to:\n${widget.email}',
+              'A verification link has been sent to:',
               textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isResending ? null : _resendEmail,
-              child: _isResending
-                  ? const CircularProgressIndicator()
-                  : const Text('Resend Email'),
+            const SizedBox(height: 10),
+            Text(
+              widget.email ?? '',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton(
+                onPressed: _isResending ? null : _resendEmail,
+                child: _isResending
+                    ? const CircularProgressIndicator()
+                    : const Text('Resend Email'),
+              ),
+            ),
+            const SizedBox(height: 10),
             if (_statusMessage.isNotEmpty)
-              Text(_statusMessage, style: const TextStyle(color: Colors.green)),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Back to Login'),
+              Text(
+                _statusMessage,
+                style: const TextStyle(color: Colors.green),
+              ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton(
+                onPressed: () => context.go('/login'),
+                child: const Text('Back to Login'),
+              ),
             ),
           ],
         ),

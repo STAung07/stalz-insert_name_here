@@ -35,13 +35,16 @@ class AuthService {
       'full_name': userFullName,
       'role': userRole,
     });
+
     final insertResponse = await supabase.
       from('users').
       select('id')
       .eq('id', userId)
       .single();
     print("Insert Response:");
+
     print(insertResponse);
+    
     return userRole;
   }
 
