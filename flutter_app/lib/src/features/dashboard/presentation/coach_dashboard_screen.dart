@@ -161,12 +161,18 @@ class SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        leading: const Icon(Icons.sports),
-        title: const Text('Training Session'),
-        subtitle: const Text('10:00 AM - 11:00 AM'),
-        trailing: const Text('Today'),
+      child: InkWell(
+        onTap: () {
+          print("tapped");
+        },
+        child: ListTile(
+          leading: const Icon(Icons.sports),
+          // todo: link to db
+          title: const Text('Training Session'),
+          subtitle: const Text('10:00 AM - 11:00 AM'),
+          trailing: const Text('Today'),
       ),
+      )
     );
   }
 }
