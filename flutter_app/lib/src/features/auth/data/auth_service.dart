@@ -44,7 +44,7 @@ class AuthService {
     print("Insert Response:");
 
     print(insertResponse);
-    
+
     return userRole;
   }
 
@@ -88,7 +88,7 @@ class AuthService {
     return user.emailConfirmedAt != null; // Check if email is verified
   }
 
-  Future<void> resendVerificationEmail(String email) async {
+  Future<void> resend(String email) async {
     await supabase.auth.resend(
       email: email,
       type: OtpType.email,

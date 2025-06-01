@@ -23,13 +23,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     });
 
     try {
-      await auth.resendVerificationEmail(widget.email!);
+      print(widget.email);
+      await auth.resend(widget.email!);
       setState(() {
         _statusMessage = 'Verification email sent!';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Failed to resend email.';
+        _statusMessage = 'Failed to resend email. Error: $e';
       });
     } finally {
       setState(() => _isResending = false);
@@ -78,7 +79,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               width: double.maxFinite,
               child: ElevatedButton(
                 onPressed: () => context.go('/login'),
-                child: const Text('Back to Login'),
+                child: const Text('Continue to Login'),
               ),
             ),
           ],

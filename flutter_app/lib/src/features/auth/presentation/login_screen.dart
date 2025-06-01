@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
       //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid role')));
       // }
     } catch (e) {
+      // TODO: Handle specific exceptions for better user feedback
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       setState(() => loading = false);
