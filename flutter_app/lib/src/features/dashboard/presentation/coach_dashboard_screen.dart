@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/src/features/auth/data/auth_service.dart';
 import 'package:flutter_app/src/models/user_model.dart';
+import 'package:go_router/go_router.dart';
 
-class CoachDashboardScreen extends StatelessWidget {
+class CoachDashboardScreen extends StatefulWidget {
   final UserModel user;
 
   const CoachDashboardScreen({super.key, required this.user});
+  CoachDashboardScreenState createState() => CoachDashboardScreenState();
+
+}
+
+class CoachDashboardScreenState extends State<CoachDashboardScreen> {
+  final auth = AuthService(); // Assuming you have an AuthService for handling authentication
+  bool loading = false;
+
+  void _signOut(BuildContext context) async {
+    setState(() {
+      loading = true;
+    });
+    // Simulate a delay for sign-out process
+    Future.delayed(const Duration(seconds: 1), () async {
+
+      setState(() {
+        loading = false;
+      });
+      await auth.signOut();
+      context.go('/login');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +41,7 @@ class CoachDashboardScreen extends StatelessWidget {
           children: [
             // Welcome Header
             Text(
-              'Hi, ${user.name}',
+              'Hi, ${widget.user.name}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 20),
@@ -92,6 +116,16 @@ class CoachDashboardScreen extends StatelessWidget {
                 ),
               ),
             ),
+
+          SizedBox(
+            width: double.maxFinite,
+            child: ElevatedButton(
+              onPressed: loading ? null : () => _signOut(context),
+              child: loading
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign Out'),
+            ),
+          ),
           ],
         ),
       ),
@@ -199,3 +233,6 @@ class StatsOverview extends StatelessWidget {
     );
   }
 }
+
+
+
