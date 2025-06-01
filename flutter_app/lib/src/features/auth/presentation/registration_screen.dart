@@ -30,19 +30,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() => loading = true);
     try {
       UserRole role = selectedRole == 'coach' ? UserRole.coach : UserRole.student;
-      final registerResponse = await auth.register(
+      final registeredUser = await auth.register(
         email: emailController.text,
         password: passwordController.text,
         fullName: fullNameController.text,
         role: role, // Pass the selected role
       );
-      print("Registration Response:");
-      print(registerResponse);
       
+      // Check if userId is null, which means registration failed
+      if (registeredUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration failed. Please try again.')),
+        );
+        return;
+      }
+      // Registration successful, need to verfiy email; redirect to verify email screen
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful! Please log in.')),
+        const SnackBar(content: Text('Registration successful! Please verify your email address provided.')),
       );
-      context.go('/login');
+      context.go('/verify_email', extra: registeredUser.email); // Redirect to verify email screen
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error here: $e')));

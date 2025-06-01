@@ -2,6 +2,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum UserRole { coach, student }
 
+class RegisteredUser {
+  final String? id;
+  final String fullName;
+  final UserRole role;
+  final String? email;
+
+  RegisteredUser({
+    required this.id,
+    required this.fullName,
+    required this.role,
+    required this.email,
+  });
+}
+
 class AuthService {
   final supabase = Supabase.instance.client;
 
@@ -12,14 +26,28 @@ class AuthService {
       throw Exception('User not found');
     }
 
-    final role = user.userMetadata?['role'] as String?;
-    if (role == null) throw Exception('No role found for user');
-    return role;
+    final userId = user.id;
+    final userRole = user.userMetadata?['role'] as String?;
+    final userFullName = user.userMetadata?['full_name'] as String?;
+
+    await supabase.from('users').insert({
+      'id': userId,
+      'full_name': userFullName,
+      'role': userRole,
+    });
+    final insertResponse = await supabase.
+      from('users').
+      select('id')
+      .eq('id', userId)
+      .single();
+    print("Insert Response:");
+    print(insertResponse);
+    return userRole;
   }
 
   // Need to create user table in Supabase with corresponding columns
   // and set up RLS policies to allow only the user to access their own data
-  Future<dynamic> register({
+  Future<RegisteredUser> register({
   required String email,
   required String password,
   required String fullName,
@@ -33,7 +61,7 @@ class AuthService {
         'role': role.name, // Store role in user_metadata
       },
     );
-
+    // Will currently return null if user does not verify their email
     final session = response.session;
     final userId = response.user?.id;
 
@@ -41,20 +69,10 @@ class AuthService {
     print(session);
     print("User ID:");
     print(userId);
+    
+    return RegisteredUser(id: userId, fullName: fullName, role: role, email: email);
 
-    await supabase.from('users').insert({
-      'id': userId,
-      'full_name': fullName,
-      'role': role.name,
-    });
-    final insertResponse = await supabase.
-      from('users').
-      select('id')
-      .eq('id', userId)
-      .single();
-    print("Insert Response:");
-    print(insertResponse);
-    return insertResponse;
+
   }
 
 
@@ -66,6 +84,14 @@ class AuthService {
     await supabase.auth.refreshSession();
     return user.emailConfirmedAt != null; // Check if email is verified
   }
+
+  Future<void> resendVerificationEmail(String email) async {
+    await supabase.auth.resend(
+      email: email,
+      type: OtpType.email,
+    );
+}
+
 
   Future<void> signOut() async {
     await supabase.auth.signOut();
