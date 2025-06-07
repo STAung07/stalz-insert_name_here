@@ -30,11 +30,6 @@ class AuthService {
     final userRole = user.userMetadata?['role'] as String?;
     final userFullName = user.userMetadata?['full_name'] as String?;
 
-    await supabase.from('users').insert({
-      'id': userId,
-      'full_name': userFullName,
-      'role': userRole,
-    });
 
     final insertResponse = await supabase.
       from('users').
@@ -67,6 +62,12 @@ class AuthService {
     // Will currently return null if user does not verify their email
     final session = response.session;
     final userId = response.user?.id;
+
+    await supabase.from('users').insert({
+      'id': userId,
+      'full_name': fullName,
+      'role': role.name,
+    });
 
     print("Session:");
     print(session);
