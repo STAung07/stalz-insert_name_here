@@ -15,7 +15,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool loading = false;
-
+  bool hidePassword = true;
+  void _togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
   void _login() async {
     setState(() => loading = true);
     try {
@@ -45,7 +50,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+            TextField(
+              controller: passwordController, 
+              decoration: 
+                InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(hidePassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: _togglePasswordVisibility
+                  ),
+                ), 
+              obscureText: hidePassword
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.maxFinite,

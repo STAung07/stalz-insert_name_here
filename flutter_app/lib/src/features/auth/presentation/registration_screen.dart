@@ -18,6 +18,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final fullNameController = TextEditingController();
   String? selectedRole; // Holds the selected role
   bool loading = false;
+  bool hidePassword = true;
+  
+  // TODO: Move out to shared utils
+  void _togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
 
   void _register() async {
     if (selectedRole == null) {
@@ -67,7 +75,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           children: [
             TextField(controller: fullNameController, decoration: const InputDecoration(labelText: 'Full Name')),
             TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password', suffixIcon: IconButton(onPressed: null, icon: Icon(Icons.visibility))), obscureText: true),
+            TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password', suffixIcon: IconButton(onPressed: _togglePasswordVisibility, icon: hidePassword ? Icon(Icons.visibility) : Icon(Icons.visibility_off))), obscureText: hidePassword),
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               value: selectedRole,
