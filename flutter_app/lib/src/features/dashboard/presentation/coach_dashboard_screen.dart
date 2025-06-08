@@ -1,12 +1,21 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/features/auth/data/auth_service.dart';
+import 'package:flutter_app/src/services/training_session_service.dart';
+import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
+
+
 
 class CoachDashboardScreen extends StatefulWidget {
   final UserModel user;
 
   const CoachDashboardScreen({super.key, required this.user});
+
+  @override
   CoachDashboardScreenState createState() => CoachDashboardScreenState();
 
 }
@@ -57,14 +66,8 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                       'Upcoming Sessions',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 10),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      // physics: const NeverScrollableScrollPhysics(),
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: 3, // todo: Replace with actual sessions count
-                      itemBuilder: (context, index) => const SessionCard(),
-                    ),
+                    const SizedBox(height: 5),
+                    SessionList(coachId: widget.user.id,),
                   ],
                 ),
               ),
@@ -153,9 +156,54 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   }
 }
 
-// Helper Widgets
+
+class SessionList extends StatefulWidget {
+  final String coachId;
+  const SessionList({super.key, required this.coachId});
+
+  @override
+  _SessionListState createState() => _SessionListState();
+}
+class _SessionListState extends State<SessionList> {
+  Future<List<TrainingSessionModel>> fetchSessions(String coachId) async {
+    print("coachId: $coachId");
+    TrainingSessionService sessionService = TrainingSessionService();
+    final sessionIdsResponse = await sessionService.getSessionsIdsByCoachId(coachId);
+    final sessionsResponse = await sessionService.getSessionsBySessionIds(sessionIdsResponse);
+    print("sessions: $sessionsResponse");
+    return sessionsResponse;
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<TrainingSessionModel>>(
+      future: fetchSessions(widget.coachId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: $snapshot');
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Text('No sessions available');
+        } else {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: min(snapshot.data!.length, 3),
+            itemBuilder: (context, index) {
+              final session = snapshot.data![index];
+              return SessionCard(session: session);
+            },
+          );
+        }
+      },
+    );
+  }
+}
+
+
 class SessionCard extends StatelessWidget {
-  const SessionCard({super.key});
+  final TrainingSessionModel session;
+  const SessionCard({super.key, required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -167,13 +215,12 @@ class SessionCard extends StatelessWidget {
         },
         child: ListTile(
           leading: const Icon(Icons.sports),
-          // todo: link to db
-          title: const Text('Training Session'),
-          subtitle: const Text('10:00 AM - 11:00 AM'),
-          trailing: const Text('Today'),
+          title: Text(session.title),
+          subtitle: Text('${DateFormat.jm().format(session.startTime)} - ${DateFormat.jm().format(session.endTime) }'),
+          trailing: Text('${session.startTime.day} ${DateFormat("MMMM").format(session.startTime)}'),
+        ),
       ),
-      )
-    );
+      );
   }
 }
 
