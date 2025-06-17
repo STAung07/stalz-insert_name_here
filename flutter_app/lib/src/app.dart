@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter(
-      initialLocation: '/register',
+      initialLocation: '/login',
       routes: [
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegistrationScreen()),
@@ -35,9 +35,35 @@ class MyApp extends StatelessWidget {
     );
 
     return MaterialApp.router(
-      title: 'CoachConnect',
+      title: 'Badminton App',
       routerConfig: router,
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFC9CD99),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFC9CD99), // Use your seed color or colorScheme.primary
+            foregroundColor: Colors.black, // Text color
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: const Size.fromHeight(48),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFC9CD99), // Use your seed color or colorScheme.primary
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFC9CD99),
+            side: const BorderSide(color: Color(0xFFC9CD99)),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -94,7 +94,7 @@ class AuthService {
       email: email,
       type: OtpType.email,
     );
-}
+  }
 
 
   Future<void> signOut() async {
