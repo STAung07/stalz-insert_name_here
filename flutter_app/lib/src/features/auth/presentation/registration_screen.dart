@@ -18,6 +18,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final fullNameController = TextEditingController();
   String? selectedRole; // Holds the selected role
   bool loading = false;
+  bool hidePassword = true;
+  
+  // TODO: Move out to shared utils
+  void _togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
 
   void _register() async {
     if (selectedRole == null) {
@@ -60,14 +68,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to Insert Name Here')),
+      appBar: AppBar(title: const Text('Register to get started!'
+        , style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(controller: fullNameController, decoration: const InputDecoration(labelText: 'Full Name')),
             TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password', suffixIcon: IconButton(onPressed: null, icon: Icon(Icons.visibility))), obscureText: true),
+            TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password', suffixIcon: IconButton(onPressed: _togglePasswordVisibility, icon: hidePassword ? Icon(Icons.visibility) : Icon(Icons.visibility_off))), obscureText: hidePassword),
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               value: selectedRole,

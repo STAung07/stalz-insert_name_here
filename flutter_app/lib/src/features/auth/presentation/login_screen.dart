@@ -15,7 +15,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool loading = false;
-
+  bool hidePassword = true;
+  void _togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
   void _login() async {
     setState(() => loading = true);
     try {
@@ -39,13 +44,31 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Welcome to XXX!',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            const Text('Your One Stop Coaching Solution', 
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
             TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+            TextField(
+              controller: passwordController, 
+              decoration: 
+                InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(hidePassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: _togglePasswordVisibility
+                  ),
+                ), 
+              obscureText: hidePassword
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.maxFinite,
