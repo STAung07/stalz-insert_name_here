@@ -1,5 +1,5 @@
 class TrainingSessionModel  {
-  final String sessionId;
+  final String? sessionId;
   final String academyId;
   final String title;
   final DateTime startTime;
@@ -7,7 +7,7 @@ class TrainingSessionModel  {
   final String location;
 
   TrainingSessionModel({
-    required this.sessionId,
+    this.sessionId,
     required this.academyId,
     required this.title,
     required this.startTime,
@@ -23,5 +23,15 @@ class TrainingSessionModel  {
       endTime: DateTime.parse(map['end_time'] ?? ''),
       location: map['location']?? '',
     );
+  }
+
+  Map<String, dynamic> toJsonMap(TrainingSessionModel session) {
+    return {
+      // 'academy_id': session.academyId,
+      'title': session.title,
+      'start_time': session.startTime.toIso8601String(),
+      'end_time': session.endTime.toIso8601String(),
+      'location': session.location,
+    };
   }
 }

@@ -12,4 +12,11 @@ class SessionCoachModel  {
       coachId: map['coach_id']?? '',
     );
   }
+
+  Map<String, dynamic> toJsonMap(SessionCoachModel sessionCoach) {
+    return {
+      'session_id': sessionCoach.sessionId,
+      'coachId': sessionCoach.coachId
+    };
+  }
 }

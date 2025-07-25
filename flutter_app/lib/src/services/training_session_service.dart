@@ -23,14 +23,43 @@ class TrainingSessionService extends DatabaseService{
     return sessionIds;
   }
 
-  Future<List<TrainingSessionModel>> getSessionsBySessionIds(List<String> sessionIds) async {
+  Future<List<TrainingSessionModel>> getSessionsBySessionIds(List<String> sessionIds, int days) async {
+    final DateTime queryEndDate = DateTime.now().add(Duration(days: days));
+    if (sessionIds.isEmpty) {
+      return [];
+    }
     final response = await supabase
         .from('training_sessions')
         .select()
-        .in_('id', sessionIds);
+        .in_('id', sessionIds)
+        .gte('start_time', DateTime.now().toIso8601String())
+        .lte('start_time', queryEndDate.toIso8601String());
     List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
     return sessions;
   }
 
-  // Add other user-specific operations
+  TrainingSessionModel buildSessionModel (String title, String academyId, String description, DateTime startTime, DateTime endTime, String location) {
+    return TrainingSessionModel(
+      title: title,
+      academyId: academyId,
+      startTime: startTime,
+      endTime: endTime,
+      location: location,
+    );
+  }
+
+  Future<void> createSession(TrainingSessionModel session, String coachId) async {
+    final sessionResponse = await supabase
+      .from('training_sessions')
+      .insert(session.toJsonMap(session))
+      .select()
+      .single();
+    // Insert coach-session relationship
+    await supabase
+      .from('session_coaches')
+      .insert({
+        'session_id': sessionResponse['id'],
+        'coach_id': coachId
+      });
+  }
 }

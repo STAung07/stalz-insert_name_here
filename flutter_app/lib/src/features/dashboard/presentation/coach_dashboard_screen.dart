@@ -1,12 +1,17 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/features/auth/data/auth_service.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/widgets/session_list.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'widgets/add_session_form.dart';
+import 'widgets/action_button.dart';
+import 'widgets/session_card.dart';
+import 'widgets/stats_overview.dart';
 
 
 
@@ -21,6 +26,7 @@ class CoachDashboardScreen extends StatefulWidget {
 }
 
 class CoachDashboardScreenState extends State<CoachDashboardScreen> {
+  final GlobalKey<SessionListState> _sessionListKey = GlobalKey<SessionListState>();
   final auth = AuthService(); // Assuming you have an AuthService for handling authentication
   bool loading = false;
 
@@ -54,26 +60,6 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 20),
-
-            // Upcoming Sessions Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Upcoming Sessions',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 5),
-                    SessionList(coachId: widget.user.id,),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
             // Quick Actions Section
             Text(
               'Quick Actions',
@@ -85,9 +71,30 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
               children: [
                 ActionButton(
                   icon: Icons.add_chart,
-                  label: 'Create Plan',
+                  label: 'Create Session',
                   onTap: () {
-                    // Navigate to create plan
+                    // Navigate to create session
+                     showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Add New Session'),
+                          content: AddSessionForm(onSessionCreated: () async {
+                            // delay is so that the db will get updated in time
+                            // TODO: improve this logic
+                            await Future.delayed(Duration(milliseconds: 500));
+                            _sessionListKey.currentState?.refreshSessions();
+                              },
+                              coachId: widget.user.id), // Your form widget
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text('Cancel'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
                 ),
                 ActionButton(
@@ -98,6 +105,25 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                   },
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            // Upcoming Sessions Card
+            // TODO: sort the sessions in ascending order
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upcoming Sessions',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 5),
+                    SessionList(key:_sessionListKey, coachId: widget.user.id,),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -119,7 +145,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                 ),
               ),
             ),
-
+          const SizedBox(height: 16),
           SizedBox(
             width: double.maxFinite,
             child: ElevatedButton(
@@ -155,137 +181,4 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
     );
   }
 }
-
-
-class SessionList extends StatefulWidget {
-  final String coachId;
-  const SessionList({super.key, required this.coachId});
-
-  @override
-  _SessionListState createState() => _SessionListState();
-}
-class _SessionListState extends State<SessionList> {
-  Future<List<TrainingSessionModel>> fetchSessions(String coachId) async {
-    print("coachId: $coachId");
-    TrainingSessionService sessionService = TrainingSessionService();
-    final sessionIdsResponse = await sessionService.getSessionsIdsByCoachId(coachId);
-    final sessionsResponse = await sessionService.getSessionsBySessionIds(sessionIdsResponse);
-    print("sessions: $sessionsResponse");
-    return sessionsResponse;
-}
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<TrainingSessionModel>>(
-      future: fetchSessions(widget.coachId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: $snapshot');
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text('No sessions available');
-        } else {
-          return ListView.builder(
-            shrinkWrap: true,
-            itemCount: min(snapshot.data!.length, 3),
-            itemBuilder: (context, index) {
-              final session = snapshot.data![index];
-              return SessionCard(session: session);
-            },
-          );
-        }
-      },
-    );
-  }
-}
-
-
-class SessionCard extends StatelessWidget {
-  final TrainingSessionModel session;
-  const SessionCard({super.key, required this.session});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: () {
-          print("tapped");
-        },
-        child: ListTile(
-          leading: const Icon(Icons.sports),
-          title: Text(session.title),
-          subtitle: Text('${DateFormat.jm().format(session.startTime)} - ${DateFormat.jm().format(session.endTime) }'),
-          trailing: Text('${session.startTime.day} ${DateFormat("MMMM").format(session.startTime)}'),
-        ),
-      ),
-      );
-  }
-}
-
-class ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const ActionButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 32),
-          ),
-          const SizedBox(height: 8),
-          Text(label),
-        ],
-      ),
-    );
-  }
-}
-
-class StatsOverview extends StatelessWidget {
-  const StatsOverview({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildStatTile('Active Students', '24'),
-        _buildStatTile('Sessions Today', '5'),
-        _buildStatTile('This Week', '28'),
-      ],
-    );
-  }
-
-  Widget _buildStatTile(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ],
-    );
-  }
-}
-
-
 
