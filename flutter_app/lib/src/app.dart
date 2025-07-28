@@ -5,6 +5,7 @@ import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/registration_screen.dart';
 import 'features/auth/presentation/verify_email_screen.dart'; // Verify email screen
 import 'features/dashboard/presentation/dashboard_screen.dart';
+import 'features/calendar/presentation/calendar_view_screen.dart';
 import 'features/auth/domain/app_user.dart';  // Add this import
 
 class MyApp extends StatelessWidget {
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
                   return DashboardScreen(userId: AppUser.fromSupabase(currentUser).id);
                 }
               ),
+        GoRoute(path: '/calendar', builder: (_, __) => const CalendarViewScreen()),
       ],
       // redirect: (context, state) {
       //   final session = Supabase.instance.client.auth.currentSession;

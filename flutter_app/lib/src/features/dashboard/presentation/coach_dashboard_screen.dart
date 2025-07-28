@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/src/features/auth/data/auth_service.dart';
+import 'package:flutter_app/src/services/auth_service.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 
@@ -147,6 +147,15 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
         ],
         onTap: (index) {
           // Handle navigation
+          setState(() {
+            if (index == 0) {
+              context.go('/dashboard');
+            } else if (index == 1) {
+              context.go('/calendar');
+            } else if (index == 2) {
+              // context.go('/profile');
+            }
+          });
         },
       ),
     );

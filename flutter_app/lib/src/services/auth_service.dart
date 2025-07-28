@@ -75,8 +75,6 @@ class AuthService {
     print(userId);
     
     return RegisteredUser(id: userId, fullName: fullName, role: role, email: email);
-
-
   }
 
 
