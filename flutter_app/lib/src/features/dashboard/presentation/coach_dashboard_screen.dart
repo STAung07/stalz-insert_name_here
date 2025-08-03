@@ -79,8 +79,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                         return AlertDialog(
                           title: Text('Add New Session'),
                           content: SizedBox(
-                            width:
-                                screenSize.width, // 80% of screen width
+                            width: screenSize.width, // 80% of screen width
                             height:
                                 screenSize.height * 0.7, // 70% of screen height
                             child: AddSessionForm(
@@ -123,9 +122,25 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Upcoming Sessions',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Upcoming Sessions',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh, size: 20),
+                          tooltip: 'Refresh sessions',
+                          onPressed: () {
+                            final currentState = _sessionListKey.currentState;
+                            if (currentState is SessionListState) {
+                              currentState.refreshSessions();
+                            }
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 5),
                     SessionList(key: _sessionListKey, coachId: widget.user.id),
