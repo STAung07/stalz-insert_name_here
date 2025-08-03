@@ -13,8 +13,6 @@ import 'widgets/action_button.dart';
 import 'widgets/session_card.dart';
 import 'widgets/stats_overview.dart';
 
-
-
 class CoachDashboardScreen extends StatefulWidget {
   final UserModel user;
 
@@ -22,12 +20,13 @@ class CoachDashboardScreen extends StatefulWidget {
 
   @override
   CoachDashboardScreenState createState() => CoachDashboardScreenState();
-
 }
 
 class CoachDashboardScreenState extends State<CoachDashboardScreen> {
-  final GlobalKey<SessionListState> _sessionListKey = GlobalKey<SessionListState>();
-  final auth = AuthService(); // Assuming you have an AuthService for handling authentication
+  final GlobalKey<SessionListState> _sessionListKey =
+      GlobalKey<SessionListState>();
+  final auth =
+      AuthService(); // Assuming you have an AuthService for handling authentication
   bool loading = false;
 
   void _signOut(BuildContext context) async {
@@ -36,7 +35,6 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
     });
     // Simulate a delay for sign-out process
     Future.delayed(const Duration(seconds: 1), () async {
-
       setState(() {
         loading = false;
       });
@@ -74,18 +72,27 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                   label: 'Create Session',
                   onTap: () {
                     // Navigate to create session
-                     showDialog(
+                    showDialog(
                       context: context,
                       builder: (BuildContext context) {
+                        final screenSize = MediaQuery.of(context).size;
                         return AlertDialog(
                           title: Text('Add New Session'),
-                          content: AddSessionForm(onSessionCreated: () async {
-                            // delay is so that the db will get updated in time
-                            // TODO: improve this logic
-                            await Future.delayed(Duration(milliseconds: 500));
-                            _sessionListKey.currentState?.refreshSessions();
+                          content: SizedBox(
+                            width:
+                                screenSize.width, // 80% of screen width
+                            height:
+                                screenSize.height * 0.7, // 70% of screen height
+                            child: AddSessionForm(
+                              onSessionCreated: () async {
+                                await Future.delayed(
+                                  Duration(milliseconds: 500),
+                                );
+                                _sessionListKey.currentState?.refreshSessions();
                               },
-                              coachId: widget.user.id), // Your form widget
+                              coachId: widget.user.id,
+                            ),
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -107,6 +114,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
               ],
             ),
             const SizedBox(height: 20),
+
             // Upcoming Sessions Card
             // TODO: sort the sessions in ascending order
             Card(
@@ -120,7 +128,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 5),
-                    SessionList(key:_sessionListKey, coachId: widget.user.id,),
+                    SessionList(key: _sessionListKey, coachId: widget.user.id),
                   ],
                 ),
               ),
@@ -145,16 +153,17 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                 ),
               ),
             ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.maxFinite,
-            child: ElevatedButton(
-              onPressed: loading ? null : () => _signOut(context),
-              child: loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Sign Out'),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton(
+                onPressed: loading ? null : () => _signOut(context),
+                child:
+                    loading
+                        ? const CircularProgressIndicator()
+                        : const Text('Sign Out'),
+              ),
             ),
-          ),
           ],
         ),
       ),
@@ -169,10 +178,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
             icon: Icon(Icons.calendar_today),
             label: 'Calendar',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         onTap: (index) {
           // Handle navigation
@@ -181,4 +187,3 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
     );
   }
 }
-

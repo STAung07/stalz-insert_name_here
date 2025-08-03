@@ -38,20 +38,20 @@ class TrainingSessionService extends DatabaseService{
     return sessions;
   }
 
-  TrainingSessionModel buildSessionModel (String title, String academyId, String description, DateTime startTime, DateTime endTime, String location) {
-    return TrainingSessionModel(
-      title: title,
-      academyId: academyId,
-      startTime: startTime,
-      endTime: endTime,
-      location: location,
-    );
-  }
+  // TrainingSessionModel buildSessionModel (String title, String academyId, String description, DateTime startTime, DateTime endTime, String location) {
+  //   return TrainingSessionModel(
+  //     title: title,
+  //     academyId: academyId,
+  //     startTime: startTime,
+  //     endTime: endTime,
+  //     location: location,
+  //   );
+  // }
 
-  Future<void> createSession(TrainingSessionModel session, String coachId) async {
+  Future<void> upsertSession(TrainingSessionModel session, String coachId) async {
     final sessionResponse = await supabase
       .from('training_sessions')
-      .insert(session.toJsonMap(session))
+      .upsert(session.toJsonMap(session))
       .select()
       .single();
     // Insert coach-session relationship

@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/widgets/training_session_detail.dart';
+
 
 class SessionCard extends StatelessWidget {
   final TrainingSessionModel session;
-  const SessionCard({super.key, required this.session});
+  final String coachId;
+  final VoidCallback? onRefresh;
+
+  const SessionCard({
+    super.key,
+    required this.session,
+    required this.coachId,
+    this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,8 +22,15 @@ class SessionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8.0),
       child: InkWell(
         onTap: () {
-          print("tapped");
-        },
+  showDialog(
+    context: context,
+    builder: (context) => TrainingSessionDetail(
+      session: session,
+      coachId: coachId,
+      onRefresh: onRefresh,
+    ),
+  );
+},
         child: ListTile(
           leading: const Icon(Icons.sports),
           title: Text(session.title),

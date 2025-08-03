@@ -5,7 +5,6 @@ import 'package:flutter_app/src/features/dashboard/presentation/widgets/session_
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 
-
 class SessionList extends StatefulWidget {
   final String coachId;
   const SessionList({super.key, required this.coachId});
@@ -13,41 +12,60 @@ class SessionList extends StatefulWidget {
   @override
   SessionListState createState() => SessionListState();
 }
+
 class SessionListState extends State<SessionList> {
-  
+  late Future<List<TrainingSessionModel>> _futureSessions;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureSessions = fetchSessions(widget.coachId);
+  }
+
   Future<List<TrainingSessionModel>> fetchSessions(String coachId) async {
     print("coachId: $coachId");
     TrainingSessionService sessionService = TrainingSessionService();
-    final sessionIdsResponse = await sessionService.getSessionsIdsByCoachId(coachId);
-    final sessionsResponse = await sessionService.getSessionsBySessionIds(sessionIdsResponse, 7);
+    final sessionIdsResponse = await sessionService.getSessionsIdsByCoachId(
+      coachId,
+    );
+    final sessionsResponse = await sessionService.getSessionsBySessionIds(
+      sessionIdsResponse,
+      7,
+    );
     print("sessions: $sessionsResponse");
     return sessionsResponse;
-}
+  }
 
   void refreshSessions() {
     setState(() {
-      fetchSessions(widget.coachId);
+      _futureSessions = fetchSessions(widget.coachId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<TrainingSessionModel>>(
-      future: fetchSessions(widget.coachId),
+      future: _futureSessions,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         } else if (snapshot.hasError) {
-          return Text('Error: $snapshot');
+          return Text('Error: ${snapshot.error}');
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text('No sessions available');
+          return const Text('No sessions available');
         } else {
           return ListView.builder(
             shrinkWrap: true,
             itemCount: min(snapshot.data!.length, 5),
             itemBuilder: (context, index) {
               final session = snapshot.data![index];
-              return SessionCard(session: session);
+              print("SESSION ID: ");
+              print( session.sessionId);
+              return SessionCard(
+                session: session,
+                coachId: widget.coachId,
+                onRefresh: refreshSessions, // 
+              );
             },
           );
         }
@@ -55,8 +73,3 @@ class SessionListState extends State<SessionList> {
     );
   }
 }
-
-
-
-
-
