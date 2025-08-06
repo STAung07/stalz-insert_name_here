@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/services/auth_service.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,7 +14,25 @@ class CoachDashboardScreen extends StatefulWidget {
 
 class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   final auth = AuthService(); // Assuming you have an AuthService for handling authentication
+  final academyService = AcademyService(); // Assuming you have an AcademyService for fetching academies
   bool loading = false;
+  String? myCoachId = '';
+  String? myAcademyId = '';
+  List<String> myAcademyIds = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCoachAcademies();
+  }
+
+  Future<void> _fetchCoachAcademies() async {
+    // Replace with your actual user id getter
+    myCoachId = widget.user.id;
+    myAcademyId = await academyService.fetchAcademyIdsForCoach(myCoachId!);
+
+    setState(() {});
+  }
 
   void _signOut(BuildContext context) async {
     setState(() {
@@ -153,7 +172,10 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
             } else if (index == 1) {
               context.go('/calendar');
             } else if (index == 2) {
-              // context.go('/profile');
+              context.go('/coach_profile', extra: {
+                'coachId': myCoachId,
+                'academyId': myAcademyId,
+              });
             }
           });
         },

@@ -9,6 +9,19 @@ class AcademyService extends DatabaseService {
     return _instance;
   }
 
+  Future<String> fetchAcademyIdsForCoach(String coachId) async {
+    final response = await supabase
+        .from('academy_coaches')
+        .select('academy_id')
+        .eq('coach_id', coachId)
+        .limit(1)
+        .single();
+
+    // Return a list of academy IDs
+    //return List<String>.from(response.map((row) => row['academy_id']));
+    return response['academy_id'] as String;
+  }
+
   Future<List<Map<String, dynamic>>> fetchAcademies() async {
     final response = await supabase
         .from('academies')
@@ -17,6 +30,16 @@ class AcademyService extends DatabaseService {
     print('Fetched academies from Service: $response');
     return List<Map<String, dynamic>>.from(response);
   }
+
+  Future<List<Map<String, dynamic>>> fetchStudentsInAcademy(String academyId) async {
+    final response = await supabase
+        .from('academy_students')
+        .select('student_id, users(full_name, role)')
+        .eq('academy_id', academyId);
+    print('Fetched students in academy with names from service: $response');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
   Future<void> addCoachToAcademy(String academyId, String coachId) async {
     final response = await supabase
         .from('academy_coaches')
@@ -30,5 +53,70 @@ class AcademyService extends DatabaseService {
         .insert({'academy_id': academyId, 'student_id': studentId});
     await checkResponse(response);
   }
-  // Add other academy-specific operations here
+
+  // Sub-Group: Academy Management CRUD
+  Future<String> createSubgroup(String academyId, String name) async {
+    final response = await supabase
+        .from('academy_subgroups')
+        .insert({'academy_id': academyId, 'name': name})
+        .select('id')
+        .single();
+    return response['id'] as String;
+  }
+
+  Future<void> deleteSubgroup(String subgroupId) async {
+    await supabase.from('academy_subgroups').delete().eq('id', subgroupId);
+  }
+
+  Future<void> addStudentToSubgroup(String subgroupId, String studentId) async {
+    await supabase.from('subgroup_students').insert({
+      'subgroup_id': subgroupId,
+      'student_id': studentId,
+    });
+  }
+
+  Future<void> removeStudentFromSubgroup(String subgroupId, String studentId) async {
+    await supabase.from('subgroup_students')
+        .delete()
+        .eq('subgroup_id', subgroupId)
+        .eq('student_id', studentId);
+  }
+
+  Future<void> moveStudentToSubgroup(String oldSubgroupId, String newSubgroupId, String studentId) async {
+    await removeStudentFromSubgroup(oldSubgroupId, studentId);
+    await addStudentToSubgroup(newSubgroupId, studentId);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchSubgroups(String academyId) async {
+    final response = await supabase
+        .from('academy_subgroups')
+        .select('id, name')
+        .eq('academy_id', academyId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchStudentsInSubgroup(String subgroupId) async {
+    final response = await supabase
+        .from('subgroup_students')
+        .select('student_id')
+        .eq('subgroup_id', subgroupId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUnassignedStudents(String academyId) async {
+    // Get all students in academy
+    final allStudents = await supabase
+        .from('academy_students')
+        .select('student_id')
+        .eq('academy_id', academyId);
+
+    // Get all assigned students
+    final assigned = await supabase
+        .from('subgroup_students')
+        .select('student_id');
+
+    final assignedIds = assigned.map((s) => s['student_id']).toSet();
+    final unassigned = allStudents.where((s) => !assignedIds.contains(s['student_id'])).toList();
+    return List<Map<String, dynamic>>.from(unassigned);
+  }
 }
