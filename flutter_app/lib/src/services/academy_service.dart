@@ -68,6 +68,15 @@ class AcademyService extends DatabaseService {
     await supabase.from('academy_subgroups').delete().eq('id', subgroupId);
   }
 
+  Future<void> addStudentsToSubgroup(String subgroupId, List<String> studentIds) async {
+    if (studentIds.isEmpty) return;
+    final inserts = studentIds.map((id) => {
+      'subgroup_id': subgroupId,
+      'student_id': id,
+    }).toList();
+    await supabase.from('subgroup_students').insert(inserts);
+  }
+
   Future<void> addStudentToSubgroup(String subgroupId, String studentId) async {
     await supabase.from('subgroup_students').insert({
       'subgroup_id': subgroupId,
@@ -87,7 +96,7 @@ class AcademyService extends DatabaseService {
     await addStudentToSubgroup(newSubgroupId, studentId);
   }
 
-  Future<List<Map<String, dynamic>>> fetchSubgroups(String academyId) async {
+  Future<List<Map<String, dynamic>>> fetchSubgroupsFromAcademy(String academyId) async {
     final response = await supabase
         .from('academy_subgroups')
         .select('id, name')
@@ -98,7 +107,7 @@ class AcademyService extends DatabaseService {
   Future<List<Map<String, dynamic>>> fetchStudentsInSubgroup(String subgroupId) async {
     final response = await supabase
         .from('subgroup_students')
-        .select('student_id')
+        .select('student_id, users(full_name, role)')
         .eq('subgroup_id', subgroupId);
     return List<Map<String, dynamic>>.from(response);
   }
@@ -107,7 +116,7 @@ class AcademyService extends DatabaseService {
     // Get all students in academy
     final allStudents = await supabase
         .from('academy_students')
-        .select('student_id')
+        .select('student_id, users(full_name, role)')
         .eq('academy_id', academyId);
 
     // Get all assigned students
