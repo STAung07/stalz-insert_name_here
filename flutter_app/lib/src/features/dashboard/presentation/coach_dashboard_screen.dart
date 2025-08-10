@@ -115,7 +115,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
             const SizedBox(height: 20),
 
             // Upcoming Sessions Card
-            // TODO: sort the sessions in ascending order
+            // TODO: sort the sessions in chronological order
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

@@ -179,7 +179,6 @@ void _showOverlay() {
             ),
             SizedBox(height: 12),
 
-            // Wrap your TextField in CompositedTransformTarget
             CompositedTransformTarget(
               link: _layerLink,
               child: SizedBox(

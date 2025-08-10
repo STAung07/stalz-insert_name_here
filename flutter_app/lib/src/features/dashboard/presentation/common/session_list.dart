@@ -64,7 +64,8 @@ class SessionListState extends State<SessionList> {
               print( session.sessionId);
               return SessionCard(
                 session: session,
-                coachId: widget.userId,
+                userId: widget.userId,
+                userRole: widget.userRole,
                 onRefresh: refreshSessions, // 
               );
             },
