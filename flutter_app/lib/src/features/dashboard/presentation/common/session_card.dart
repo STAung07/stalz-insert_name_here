@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/src/features/dashboard/presentation/widgets/training_session_detail.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/coach/coach_session_detail.dart';
 
 
 class SessionCard extends StatelessWidget {
@@ -24,7 +24,7 @@ class SessionCard extends StatelessWidget {
         onTap: () {
   showDialog(
     context: context,
-    builder: (context) => TrainingSessionDetail(
+    builder: (context) => CoachSessionDetail(
       session: session,
       coachId: coachId,
       onRefresh: onRefresh,

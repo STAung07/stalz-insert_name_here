@@ -1,13 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app/src/features/dashboard/presentation/widgets/session_card.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/common/session_card.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 
 class SessionList extends StatefulWidget {
-  final String coachId;
-  const SessionList({super.key, required this.coachId});
+  final String userId;
+  final String userRole;
+  const SessionList({super.key, required this.userId,required this.userRole});
 
   @override
   SessionListState createState() => SessionListState();
@@ -19,14 +20,14 @@ class SessionListState extends State<SessionList> {
   @override
   void initState() {
     super.initState();
-    _futureSessions = fetchSessions(widget.coachId);
+    _futureSessions = fetchSessions(widget.userId, widget.userRole);
   }
 
-  Future<List<TrainingSessionModel>> fetchSessions(String coachId) async {
-    print("coachId: $coachId");
+  Future<List<TrainingSessionModel>> fetchSessions(String userId, userRole) async {
+    print("userId: $userId, userRole: $userRole");
     TrainingSessionService sessionService = TrainingSessionService();
-    final sessionIdsResponse = await sessionService.getSessionsIdsByCoachId(
-      coachId,
+    final sessionIdsResponse = await sessionService.getSessionsIdsByUserId(
+      userId, userRole
     );
     final sessionsResponse = await sessionService.getSessionsBySessionIds(
       sessionIdsResponse,
@@ -38,7 +39,7 @@ class SessionListState extends State<SessionList> {
 
   void refreshSessions() {
     setState(() {
-      _futureSessions = fetchSessions(widget.coachId);
+      _futureSessions = fetchSessions(widget.userId, widget.userRole);
     });
   }
 
@@ -63,7 +64,7 @@ class SessionListState extends State<SessionList> {
               print( session.sessionId);
               return SessionCard(
                 session: session,
-                coachId: widget.coachId,
+                coachId: widget.userId,
                 onRefresh: refreshSessions, // 
               );
             },

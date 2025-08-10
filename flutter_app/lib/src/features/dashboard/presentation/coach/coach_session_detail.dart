@@ -1,19 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
-import 'package:flutter_app/src/features/dashboard/presentation/widgets/add_session_form.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/coach/add_session_form.dart';
+import 'package:flutter_app/src/services/student_service.dart';
 import 'package:intl/intl.dart';
 
-class TrainingSessionDetail extends StatelessWidget {
+class CoachSessionDetail extends StatefulWidget {
   final TrainingSessionModel session;
   final String coachId;
   final VoidCallback? onRefresh;
 
-  const TrainingSessionDetail({
+  const CoachSessionDetail({
     super.key,
     required this.session,
     required this.coachId,
     this.onRefresh,
   });
+
+  @override
+  State<CoachSessionDetail> createState() => _CoachSessionDetailState();
+}
+
+class _CoachSessionDetailState extends State<CoachSessionDetail> {
+  final Map<String, String> _studentNames = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudentNames();
+  }
+
+  Future<void> _loadStudentNames() async {
+    if (widget.session.studentIds.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+    
+    try {
+      final studentService = StudentService();
+      final studentNames = await studentService.loadStudentNames(widget.session.studentIds);
+      
+      setState(() {
+        _studentNames.addAll(studentNames);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading student names: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +69,7 @@ class TrainingSessionDetail extends StatelessWidget {
             children: [
               // Title
               Text(
-                session.title,
+                widget.session.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
@@ -40,7 +79,7 @@ class TrainingSessionDetail extends StatelessWidget {
                 children: [
                   Icon(Icons.place, size: 20),
                   const SizedBox(width: 8),
-                  Text(session.location),
+                  Text(widget.session.location),
                 ],
               ),
               const SizedBox(height: 8),
@@ -49,8 +88,8 @@ class TrainingSessionDetail extends StatelessWidget {
                   Icon(Icons.access_time, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    '${DateFormat('MMM d, yyyy • h:mm a').format(session.startTime)}'
-                    ' - ${DateFormat('h:mm a').format(session.endTime)}',
+                    '${DateFormat('MMM d, yyyy • h:mm a').format(widget.session.startTime)}'
+                    ' - ${DateFormat('h:mm a').format(widget.session.endTime)}',
                   ),
                 ],
               ),
@@ -61,7 +100,7 @@ class TrainingSessionDetail extends StatelessWidget {
                 children: [
                   Icon(Icons.info_outline, size: 20),
                   const SizedBox(width: 8),
-                  Text('${session.bookingStatus} • ${session.sessionType}'),
+                  Text('${widget.session.bookingStatus} • ${widget.session.sessionType}'),
                 ],
               ),
 
@@ -73,27 +112,28 @@ class TrainingSessionDetail extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 4),
-              Text(session.trainingPlan),
+              Text(widget.session.trainingPlan),
               const SizedBox(height: 12),
               Text('Feedback', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
-              Text(session.feedback),
+              Text(widget.session.feedback),
 
               const Divider(height: 24),
 
               // Students
               Text('Students', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children:
-                    session.studentIds
+              _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: widget.session.studentIds
                         .map(
-                          (id) => Chip(label: Text(id)),
-                        ) // Consider mapping IDs to names if possible
+                          (id) => Chip(label: Text(_studentNames[id] ?? id)),
+                        )
                         .toList(),
-              ),
+                  ),
 
               const Spacer(),
 
@@ -144,14 +184,14 @@ class TrainingSessionDetail extends StatelessWidget {
                                       double
                                           .infinity, // expand to max width of ConstrainedBox
                                   child: AddSessionForm(
-                                    sessionId: session.sessionId,
-                                    coachId: coachId,
-                                    initialSession: session, // for edit
+                                    sessionId: widget.session.sessionId,
+                                    coachId: widget.coachId,
+                                    initialSession: widget.session, // for edit
                                     onSessionCreated: () async {
-                                      await Future.delayed(
-                                        Duration(milliseconds: 500),
-                                      );
-                                      onRefresh?.call();
+                                        await Future.delayed(
+                                          Duration(milliseconds: 500),
+                                        );
+                                        widget.onRefresh?.call();
                                     },
                                   ),
                                 ),

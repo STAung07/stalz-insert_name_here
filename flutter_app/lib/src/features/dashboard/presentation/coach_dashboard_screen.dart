@@ -1,17 +1,17 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/features/auth/data/auth_service.dart';
-import 'package:flutter_app/src/features/dashboard/presentation/widgets/session_list.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/common/session_list.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'widgets/add_session_form.dart';
-import 'widgets/action_button.dart';
-import 'widgets/session_card.dart';
-import 'widgets/stats_overview.dart';
+import 'coach/add_session_form.dart';
+import 'common/action_button.dart';
+import 'common/session_card.dart';
+import 'common/stats_overview.dart';
 
 class CoachDashboardScreen extends StatefulWidget {
   final UserModel user;
@@ -143,7 +143,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    SessionList(key: _sessionListKey, coachId: widget.user.id),
+                    SessionList(key: _sessionListKey, userId: widget.user.id, userRole: widget.user.role),
                   ],
                 ),
               ),

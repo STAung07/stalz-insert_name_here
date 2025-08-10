@@ -1,4 +1,3 @@
-import 'package:flutter_app/src/models/session_coach_model.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/database_service.dart';
 
@@ -10,15 +9,23 @@ class TrainingSessionService extends DatabaseService{
   factory TrainingSessionService() {
     return _instance;
   }
-  Future<List<String>> getSessionsIdsByCoachId(String coachId) async {
-    final response = await supabase
-    .from('session_coaches')
-    .select('session_id')
-    .eq('coach_id', coachId);
+  Future<List<String>> getSessionsIdsByUserId(String userId, String userRole) async {
+    dynamic response;
+
+    if (userRole == 'coach') {
+      response = await supabase
+      .from('session_coaches')
+      .select('session_id')
+      .eq('coach_id', userId);
+    } else {
+      response = await supabase
+      .from('session_attendance')
+      .select('session_id')
+      .eq('student_id', userId);
+    }
 
   // todo: might need to validate response -> await check response
     List<String> sessionIds = response.map<String>((e) => e['session_id'].toString()).toList();
-    print(sessionIds); // Print the response to check its contents
 
     return sessionIds;
   }
@@ -46,20 +53,72 @@ class TrainingSessionService extends DatabaseService{
   //     endTime: endTime,
   //     location: location,
   //   );
-  // }
+  // 
 
-  Future<void> upsertSession(TrainingSessionModel session, String coachId) async {
+  // Create a training session after saving add session form
+  // TODO: replace coach id with list of coach Ids
+  Future<void> createTrainingSession(TrainingSessionModel session, String coachId, List<String> studentIds) async {      
+      final trainingSessionResponse = await upsertTrainingSession(session);
+      if (trainingSessionResponse == null) return;
+      final sessionId = trainingSessionResponse['id'];
+      await upsertUserSession(sessionId, coachId, 'coach');
+      await batchUpsertUserSession(sessionId, studentIds, 'student');
+  }
+
+  Future<dynamic> upsertTrainingSession(TrainingSessionModel session) async {
     final sessionResponse = await supabase
       .from('training_sessions')
       .upsert(session.toJsonMap(session))
       .select()
       .single();
-    // Insert coach-session relationship
-    await supabase
-      .from('session_coaches')
-      .insert({
-        'session_id': sessionResponse['id'],
-        'coach_id': coachId
-      });
+    return sessionResponse;
   }
+//sessionResponse['id']
+
+  Future<void> upsertUserSession(String sessionId, String userId, String userRole) async {
+    // dynamic response;
+    if (userRole == 'coach') {
+      await supabase
+      .from('session_coaches')
+      .upsert({
+        'session_id': sessionId,
+        'coach_id': userId
+      });
+    } else {
+      await supabase
+      .from('session_attendance')
+      .upsert({
+        'session_id': sessionId,
+        'student_id': userId
+      });
+    }
+  }
+
+    Future<void> batchUpsertUserSession(String sessionId, List<String> userIds, String userRole) async {
+      if (userIds.isEmpty) return;
+      
+      if (userRole == 'coach') {
+        // Create a list of records to insert
+        final List<Map<String, dynamic>> records = userIds.map((userId) => {
+          'session_id': sessionId,
+          'coach_id': userId
+        }).toList();
+        
+        await supabase
+          .from('session_coaches')
+          .upsert(records);
+      } else {
+        // Create a list of records to insert for students
+        final List<Map<String, dynamic>> records = userIds.map((userId) => {
+          'session_id': sessionId,
+          'student_id': userId
+        }).toList();
+        
+        await supabase
+          .from('session_attendance')
+          .upsert(records);
+      }
+    }
+
+    
 }

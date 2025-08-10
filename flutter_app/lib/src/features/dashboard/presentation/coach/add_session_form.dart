@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
+import 'package:flutter_app/src/services/student_service.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/coach/student_search_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddSessionForm extends StatefulWidget {
   final String? sessionId;
@@ -28,6 +31,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _trainingPlanController = TextEditingController();
   final _feedbackController = TextEditingController();
   final List<String> _selectedStudents = [];
+  final Map<String, String> _studentNames = {}; // Map student IDs to names
 
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
@@ -52,6 +56,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
     );
     if (time == null) return;
 
+    if (!mounted) return;
     setState(() {
       if (isStart) {
         _selectedStartDate = date;
@@ -73,6 +78,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
       _trainingPlanController.text = session.trainingPlan;
       _feedbackController.text = session.feedback;
       _selectedStudents.addAll(session.studentIds);
+      
+      // Load student names for the selected student IDs
+      _loadStudentNames(session.studentIds);
 
       _selectedStartDate = session.startTime;
       _selectedEndDate = session.endTime;
@@ -186,6 +194,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                                                           _bookingStatus =
                                                               status,
                                                     );
+                                                    FocusScope.of(context).unfocus();
                                                     Navigator.pop(ctx);
                                                   },
                                                 ),
@@ -229,6 +238,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                                                     setState(
                                                       () => _sessionType = type,
                                                     );
+                                                    FocusScope.of(context).unfocus();
                                                     Navigator.pop(ctx);
                                                   },
                                                 ),
@@ -244,51 +254,21 @@ class _AddSessionFormState extends State<AddSessionForm> {
               ),
             ),
 
-            // Students (simplified placeholder UI)
-            Card(
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Add Students",
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children:
-                          _selectedStudents
-                              .map(
-                                (name) => Chip(
-                                  label: Text(name),
-                                  onDeleted:
-                                      () => setState(
-                                        () => _selectedStudents.remove(name),
-                                      ),
-                                ),
-                              )
-                              .toList(),
-                    ),
-                    SizedBox(height: 12),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search students...',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      onSubmitted: (value) {
-                        if (value.trim().isNotEmpty) {
-                          setState(() => _selectedStudents.add(value.trim()));
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
+            // Students search widget
+            StudentSearchWidget(
+              selectedStudents: _selectedStudents,
+              studentNames: _studentNames,
+              onStudentSelected: (id, name) {
+                setState(() {
+                  _selectedStudents.add(id);
+                  _studentNames[id] = name;
+                });
+              },
+              onStudentRemoved: (id) {
+                setState(() {
+                  _selectedStudents.remove(id);
+                });
+              },
             ),
 
             // Training Plan & Feedback
@@ -345,16 +325,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       location: _locationController.text,
                       bookingStatus: _bookingStatus,
                       sessionType: _sessionType,
-                      studentIds: _selectedStudents,
+                      studentIds: _selectedStudents, // Now contains student IDs instead of names
                       trainingPlan: _trainingPlanController.text,
                       feedback: _feedbackController.text,
                     );
-                                        print("CALLING UPSERT SESSION HERE FROM SESSION DETAIL: ");
 
-                    print(widget.sessionId);
-                    TrainingSessionService().upsertSession(
+                    print('SessionId: ${newSession.sessionId}');
+                    TrainingSessionService().createTrainingSession(
                       newSession,
-                      widget.coachId,
+                      widget.coachId, // TODO: replace this by querying all academy coaches
+                      _selectedStudents,
                     );
                     if (widget.onSessionCreated != null)
                       widget.onSessionCreated!();
@@ -369,6 +349,28 @@ class _AddSessionFormState extends State<AddSessionForm> {
       ),
     );
   }
+
+  // Load student names for the given student IDs
+  Future<void> _loadStudentNames(List<String> studentIds) async {
+    if (studentIds.isEmpty) return;
+    
+    try {
+      final studentService = StudentService();
+      final studentNames = await studentService.loadStudentNames(studentIds);
+      
+      if (mounted) {
+        setState(() {
+          _studentNames.addAll(studentNames);
+        });
+      } else {
+        return;
+      }
+    } catch (e) {
+      print('Error loading student names: $e');
+    }
+  }
+
+
 
   @override
   void dispose() {
