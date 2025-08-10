@@ -91,9 +91,13 @@ class AcademyService extends DatabaseService {
         .eq('student_id', studentId);
   }
 
-  Future<void> moveStudentToSubgroup(String oldSubgroupId, String newSubgroupId, String studentId) async {
-    await removeStudentFromSubgroup(oldSubgroupId, studentId);
-    await addStudentToSubgroup(newSubgroupId, studentId);
+  Future<void> moveStudentToSubgroup(String? oldSubgroupId, String? newSubgroupId, String studentId) async {
+    if (oldSubgroupId != null && oldSubgroupId.isNotEmpty) {
+      await removeStudentFromSubgroup(oldSubgroupId, studentId);
+    }
+    if (newSubgroupId != null && newSubgroupId.isNotEmpty) {
+      await addStudentToSubgroup(newSubgroupId, studentId);
+    }
   }
 
   Future<List<Map<String, dynamic>>> fetchSubgroupsFromAcademy(String academyId) async {

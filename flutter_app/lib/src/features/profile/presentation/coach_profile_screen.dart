@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/services/academy_service.dart';
+import 'package:go_router/go_router.dart';
 
 class CoachProfileScreen extends StatefulWidget {
   final String coachId;
@@ -111,7 +112,127 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
-  Widget _buildSubgroupTile(String name, Future<List<Map<String, dynamic>>> studentsFuture) {
+  Future<void> _showEditSubgroupDialog(String subgroupId, String subgroupName) async {
+    // Fetch all students in academy and all students in this subgroup
+    final allStudents = await academyService.fetchStudentsInAcademy(widget.academyId);
+    final subgroupStudents = await academyService.fetchStudentsInSubgroup(subgroupId);
+    final subgroupStudentIds = subgroupStudents.map((s) => s['student_id']).toSet();
+
+    List<dynamic> selectedStudentIds = subgroupStudentIds.toList();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: Text('Edit $subgroupName'),
+            content: SizedBox(
+              width: 300,
+              height: 300,
+              child: ListView(
+                children: allStudents.map((student) {
+                  final id = student['student_id'];
+                  final name = student['users']?['full_name'] ?? 'No Name';
+                  return CheckboxListTile(
+                    value: selectedStudentIds.contains(id),
+                    title: Text(name),
+                    onChanged: (checked) {
+                      setState(() {
+                        if (checked == true) {
+                          selectedStudentIds.add(id);
+                        } else {
+                          selectedStudentIds.remove(id);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Remove students not in selectedStudentIds
+                  for (final student in subgroupStudents) {
+                    if (!selectedStudentIds.contains(student['student_id'])) {
+                      await academyService.removeStudentFromSubgroup(subgroupId, student['student_id']);
+                    }
+                  }
+                  // Add students newly selected
+                  for (final id in selectedStudentIds) {
+                    if (!subgroupStudentIds.contains(id)) {
+                      await academyService.addStudentToSubgroup(subgroupId, id);
+                    }
+                  }
+                  Navigator.pop(context);
+                  await _fetchAll();
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showMoveStudentDialog(String currentSubgroupId, String studentId) async {
+    // Get all subgroups
+    final allSubgroups = [
+      {'id': null, 'name': 'Unassigned'},
+      ...subgroups
+    ];
+    String? selectedSubgroupId = currentSubgroupId == '' ? null : currentSubgroupId;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Move Student'),
+          content: DropdownButton<String?>(
+            value: selectedSubgroupId,
+            isExpanded: true,
+            items: allSubgroups.map((sg) {
+              return DropdownMenuItem<String?>(
+                value: sg['id'],
+                child: Text(sg['name']),
+              );
+            }).toList(),
+            onChanged: (value) {
+              selectedSubgroupId = value;
+              (context as Element).markNeedsBuild();
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (selectedSubgroupId != currentSubgroupId) {
+                  await academyService.moveStudentToSubgroup(
+                    currentSubgroupId == '' ? null : currentSubgroupId,
+                    selectedSubgroupId,
+                    studentId,
+                  );
+                  Navigator.pop(context);
+                  await _fetchAll();
+                }
+              },
+              child: const Text('Move'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSubgroupTile(String name, String subgroupId, Future<List<Map<String, dynamic>>> studentsFuture) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -126,7 +247,16 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Expanded(child: Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => _showEditSubgroupDialog(subgroupId, name),
+                  tooltip: 'Edit Subgroup',
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: studentsFuture,
@@ -151,7 +281,11 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.person_outline),
                       title: Text(student['users']?['full_name'] ?? 'No Name'),
-                      // subtitle: Text(student['student_id']),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.swap_horiz),
+                        tooltip: 'Move Student',
+                        onPressed: () => _showMoveStudentDialog(subgroupId, student['student_id']),
+                      ),
                     )
                   ).toList(),
                 );
@@ -194,6 +328,11 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                     leading: const Icon(Icons.person_outline),
                     //title: Text(student['student_id']),
                     title: Text(student['users']?['full_name'] ?? 'No Name'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.swap_horiz),
+                      tooltip: 'Assign to Subgroup',
+                      onPressed: () => _showMoveStudentDialog('', student['student_id']),
+                    ),
                   )
                 ).toList(),
               ),
@@ -209,34 +348,64 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       appBar: AppBar(title: const Text('Academy')),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    academyName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      academyName,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: _showCreateSubgroupDialog,
-                    child: const Text('Create Subgroup'),
-                  ),
-                  _buildUnassignedTile(),
-                  ...subgroups.map((subgroup) =>
-                    _buildSubgroupTile(
-                      subgroup['name'],
-                      academyService.fetchStudentsInSubgroup(subgroup['id']),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _showCreateSubgroupDialog,
+                      child: const Text('Create Subgroup'),
                     ),
-                  ),
-                ],
+                    _buildUnassignedTile(),
+                    ...subgroups.map((subgroup) =>
+                      _buildSubgroupTile(
+                        subgroup['name'],
+                        subgroup['id'],
+                        academyService.fetchStudentsInSubgroup(subgroup['id']),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        onTap: (index) {
+          // Handle navigation
+          setState(() {
+            if (index == 0) {
+              context.go('/dashboard');
+            } else if (index == 1) {
+              context.go('/calendar');
+            }
+          });
+        },
+      ),
     );
   }
 }
