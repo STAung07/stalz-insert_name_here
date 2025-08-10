@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/src/features/auth/data/auth_service.dart';
+import 'package:flutter_app/src/services/auth_service.dart';
+
 import 'package:flutter_app/src/features/dashboard/presentation/common/session_list.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';

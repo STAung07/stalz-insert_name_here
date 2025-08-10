@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../auth/data/auth_service.dart'; // Assuming you have an AuthService for handling authentication
+import '../../../services/auth_service.dart'; // Assuming you have an AuthService for handling authentication
+import '../../../services/academy_service.dart';
 
 
 class RegistrationScreen extends StatefulWidget {
@@ -13,13 +14,31 @@ class RegistrationScreen extends StatefulWidget {
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final auth = AuthService();
+  final academyService = AcademyService();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final fullNameController = TextEditingController();
   String? selectedRole; // Holds the selected role
+  String? selectedAcademyId;
   bool loading = false;
   bool hidePassword = true;
+  List<Map<String, dynamic>> academies = []; // List of academies, if needed
   
+  @override
+  void initState() {
+    super.initState();
+    // Optionally, fetch academies if needed
+    _fetchAcademies();
+  }
+
+  Future<void> _fetchAcademies() async {
+    final result = await academyService.fetchAcademies();
+    print('Fetched academies: $result');
+    setState(() {
+      academies = result;
+    });
+  }
+
   // TODO: Move out to shared utils
   void _togglePasswordVisibility() {
     setState(() {
@@ -27,7 +46,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
   }
 
-  void _register() async {
+  Future<void> _register() async {
     if (selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a role')),
@@ -52,11 +71,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         );
         return;
       }
+      // ...existing code...
+      if (selectedAcademyId != null && selectedAcademyId!.isNotEmpty) {
+        final userId = registeredUser.id;
+        if (selectedRole == 'coach') {
+          await academyService.addCoachToAcademy(selectedAcademyId!, userId!);
+        } else if (selectedRole == 'student') {
+          await academyService.addStudentToAcademy(selectedAcademyId!, userId!);
+        }
+      }
       // Registration successful, need to verfiy email; redirect to verify email screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful! Please verify your email address provided.')),
-      );
-      context.go('/verify_email', extra: registeredUser.email); // Redirect to verify email screen
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Registration successful! Please verify your email address provided.')),
+      // );
+      // context.go('/verify_email', extra: registeredUser.email); // Redirect to verify email screen
+      context.go('/dashboard');
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error here: $e')));
@@ -88,6 +117,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ],
               onChanged: (value) => setState(() => selectedRole = value),
               decoration: const InputDecoration(labelText: 'Select Role'),
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: selectedAcademyId,
+              items: [
+                const DropdownMenuItem(value: null, child: Text('No Academy (optional)')),
+                ...academies.map((academy) => DropdownMenuItem(
+                  value: academy['id'] as String,
+                  child: Text(academy['name'] as String),
+                )),
+              ],
+              onChanged: (value) => setState(() => selectedAcademyId = value),
+              decoration: const InputDecoration(labelText: 'Select Academy (optional)'),
             ),
             const SizedBox(height: 20),
             SizedBox(
