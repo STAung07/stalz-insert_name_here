@@ -1,5 +1,6 @@
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:flutter_app/src/services/database_service.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 
 class UserService extends DatabaseService{
   UserService._internal() : super.internal();
@@ -16,11 +17,15 @@ class UserService extends DatabaseService{
         .eq('id', userId)
         .single();
   // todo: might need to validate response -> await check response
-    response.forEach((key, value) {
+    final userRole = response['role'] as String;
+    final academyId = await AcademyService().getUserAcademy(userId, userRole);
+
+    final userMap = response as Map<String, dynamic>;
+    userMap['academy'] = academyId; // Add academyId to the map
+    userMap.forEach((key, value) {
       print('Key: $key, Value: $value');
     });
-
-    return UserModel.fromMap(response as Map<String, dynamic>);
+    return UserModel.fromMap(userMap);
   }
 
   Future<void> updateUser(String userId, Map<String, dynamic> data) async {

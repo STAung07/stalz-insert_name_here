@@ -1,4 +1,5 @@
 import 'package:flutter_app/src/models/training_session_model.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 import 'package:flutter_app/src/services/database_service.dart';
 
 class TrainingSessionService extends DatabaseService{
@@ -61,7 +62,15 @@ class TrainingSessionService extends DatabaseService{
       final trainingSessionResponse = await upsertTrainingSession(session);
       if (trainingSessionResponse == null) return;
       final sessionId = trainingSessionResponse['id'];
-      await upsertUserSession(sessionId, coachId, 'coach');
+      final academyId = await AcademyService().getUserAcademy(coachId, 'coach');
+      List<String> coachIds = [];
+      if (academyId == null) {
+        coachIds = [coachId];
+      } else {
+        coachIds = await AcademyService().getUsersFromSameAcademy(academyId, 'coach');
+      }
+      // await upsertUserSession(sessionId, coachId, 'coach');
+      await batchUpsertUserSession(sessionId, coachIds, 'coach');
       await batchUpsertUserSession(sessionId, studentIds, 'student');
   }
 

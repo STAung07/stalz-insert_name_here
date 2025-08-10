@@ -14,12 +14,16 @@ class StudentSearchWidget extends StatefulWidget {
   /// Callback when a student is removed
   final Function(String id) onStudentRemoved;
 
+  /// Academy ID to filter students
+  final String? academyId;
+
   const StudentSearchWidget({
     Key? key,
     required this.selectedStudents,
     required this.studentNames,
     required this.onStudentSelected,
     required this.onStudentRemoved,
+    required this.academyId,
   }) : super(key: key);
 
   @override
@@ -121,7 +125,7 @@ void _showOverlay() {
       return;
     }
     try {
-      final results = await _studentService.searchStudentsByName(query);
+      final results = await _studentService.searchStudentsByName(query, widget.academyId);
       if (mounted) {
         setState(() {
           _searchResults = results;

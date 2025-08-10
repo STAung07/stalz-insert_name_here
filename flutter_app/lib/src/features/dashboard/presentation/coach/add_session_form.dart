@@ -9,12 +9,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AddSessionForm extends StatefulWidget {
   final String? sessionId;
   final String coachId;
+  final String? academyId;
   final VoidCallback? onSessionCreated;
   final TrainingSessionModel? initialSession;
 
   const AddSessionForm({
     super.key,
     required this.coachId,
+    this.academyId,
     this.onSessionCreated,
     this.initialSession,
     this.sessionId
@@ -258,6 +260,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
             StudentSearchWidget(
               selectedStudents: _selectedStudents,
               studentNames: _studentNames,
+              academyId: widget.academyId,
               onStudentSelected: (id, name) {
                 setState(() {
                   _selectedStudents.add(id);

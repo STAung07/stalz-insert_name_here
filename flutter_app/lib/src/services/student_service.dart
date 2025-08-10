@@ -1,5 +1,7 @@
 import 'package:flutter_app/src/models/user_model.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 import 'package:flutter_app/src/services/database_service.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 
 class StudentService extends DatabaseService {
   StudentService._internal() : super.internal();
@@ -30,18 +32,21 @@ class StudentService extends DatabaseService {
 
   /// Search for students by name
   /// Returns a list of maps with 'id' and 'name' keys
-  Future<List<Map<String, dynamic>>> searchStudentsByName(String query) async {
+  Future<List<Map<String, dynamic>>> searchStudentsByName(String query, String? academyId) async {
     if (query.trim().isEmpty) {
       return [];
     }
-    
+    if (academyId == null || academyId.trim().isEmpty) {
+      return [];
+    }
     try {
       final response = await supabase
           .from('users')
           .select('id, full_name')
           .eq('role', 'student')
-          .ilike('full_name', '%$query%')
-          .limit(10);
+           .ilike('full_name', '%$query%')
+           .in_('id', await AcademyService().getUsersFromSameAcademy(academyId, 'student'))
+           .limit(10);
       
       // Explicitly cast each item to Map<String, dynamic> before mapping
       return List<Map<String, dynamic>>.from(
@@ -86,6 +91,7 @@ class StudentService extends DatabaseService {
           .from('users')
           .select('id, full_name')
           .in_('id', studentIds);
+          
       
       final Map<String, String> studentNames = {};
       for (var user in List<dynamic>.from(response)) {

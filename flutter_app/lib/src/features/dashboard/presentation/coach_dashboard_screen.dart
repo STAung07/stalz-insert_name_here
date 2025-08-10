@@ -90,6 +90,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                                 _sessionListKey.currentState?.refreshSessions();
                               },
                               coachId: widget.user.id,
+                              academyId: widget.user.academy,
                             ),
                           ),
                           actions: [
