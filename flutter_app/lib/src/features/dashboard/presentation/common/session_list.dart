@@ -34,6 +34,9 @@ class SessionListState extends State<SessionList> {
       7,
     );
     print("sessions: $sessionsResponse");
+    
+    // Sort sessions by start time and date
+    sessionsResponse.sort((a, b) => a.startTime.compareTo(b.startTime));
     return sessionsResponse;
   }
 

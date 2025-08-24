@@ -36,7 +36,6 @@ class MyApp extends StatelessWidget {
             final coachId = extra?['coachId'] as String?;
             final academyId = extra?['academyId'] as String?;
             // Check if coachId and academyId are provided
-            print('Coach ID: $coachId, Academy ID: $academyId');
             if (coachId == null || academyId == null) {
               return const Scaffold(body: Center(child: Text('Missing coach or academy ID')));
             }

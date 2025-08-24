@@ -58,16 +58,39 @@ class _AddSessionFormState extends State<AddSessionForm> {
     );
     if (time == null) return;
 
-    if (!mounted) return;
-    setState(() {
-      if (isStart) {
+    final selectedDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+
+    if (isStart) {
+      setState(() {
         _selectedStartDate = date;
         _startTime = time;
-      } else {
+      });
+    } else {
+      // Validate that end time is after start time
+      if (_selectedStartDate != null && _startTime != null) {
+        final startDateTime = DateTime(
+          _selectedStartDate!.year,
+          _selectedStartDate!.month,
+          _selectedStartDate!.day,
+          _startTime!.hour,
+          _startTime!.minute,
+        );
+        if (selectedDateTime.isBefore(startDateTime)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('End date and time must be after start date and time.'),
+            ),
+          );
+          return; // Do not update state if validation fails
+        }
+      }
+      setState(() {
         _selectedEndDate = date;
         _endTime = time;
-      }
-    });
+      });
+    }
+    if (!mounted) return;
   }
   @override
   @override
