@@ -32,7 +32,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _locationController = TextEditingController();
   final _trainingPlanController = TextEditingController();
   final _feedbackController = TextEditingController();
-  final List<String> _selectedStudents = [];
+  final List<Map<String, String>> _selectedStudents = [];
   final Map<String, String> _studentNames = {}; // Map student IDs to names
 
   DateTime? _selectedStartDate;
@@ -70,19 +70,29 @@ class _AddSessionFormState extends State<AddSessionForm> {
     });
   }
   @override
+  @override
   void initState() {
     super.initState();
+    _initializeSessionData();
+  }
 
+  Future<void> _initializeSessionData() async {
     final session = widget.initialSession;
+    print('academy id: ${widget.academyId}');
     if (session != null) {
       _titleController.text = session.title;
       _locationController.text = session.location;
       _trainingPlanController.text = session.trainingPlan;
       _feedbackController.text = session.feedback;
-      _selectedStudents.addAll(session.studentIds);
-      
-      // Load student names for the selected student IDs
-      _loadStudentNames(session.studentIds);
+      // Load student names for the selected student IDs first and await its completion
+      await _loadStudentNames(session.studentIds);
+
+      // Then populate _selectedStudents using the now-available names
+      if (mounted) {
+        setState(() {
+          _selectedStudents.addAll(session.studentIds.map((id) => {'id': id, 'name': _studentNames[id] ?? '', 'type': 'student'}));
+        });
+      }
 
       _selectedStartDate = session.startTime;
       _selectedEndDate = session.endTime;
@@ -261,15 +271,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
               selectedStudents: _selectedStudents,
               studentNames: _studentNames,
               academyId: widget.academyId,
-              onStudentSelected: (id, name) {
+              onStudentSelected: (selectedItem) {
                 setState(() {
-                  _selectedStudents.add(id);
-                  _studentNames[id] = name;
+                  _selectedStudents.add(selectedItem);
+                  _studentNames[selectedItem['id']!] = selectedItem['name']!;
                 });
               },
               onStudentRemoved: (id) {
                 setState(() {
-                  _selectedStudents.remove(id);
+                  _selectedStudents.removeWhere((item) => item['id'] == id);
+                  _studentNames.remove(id);
                 });
               },
             ),
@@ -305,11 +316,12 @@ class _AddSessionFormState extends State<AddSessionForm> {
             // Save Session Button
             Center(
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    final studentIds = await _getFlattenedStudentIds();
                     final newSession = TrainingSessionModel(
                       sessionId: widget.sessionId,
-                      academyId: '',
+                      academyId: widget.academyId ?? '',
                       title: _titleController.text,
                       startTime: DateTime(
                         _selectedStartDate!.year,
@@ -328,16 +340,15 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       location: _locationController.text,
                       bookingStatus: _bookingStatus,
                       sessionType: _sessionType,
-                      studentIds: _selectedStudents, // Now contains student IDs instead of names
+                      studentIds: studentIds,
                       trainingPlan: _trainingPlanController.text,
                       feedback: _feedbackController.text,
                     );
 
-                    print('SessionId: ${newSession.sessionId}');
                     TrainingSessionService().createTrainingSession(
                       newSession,
-                      widget.coachId, // TODO: replace this by querying all academy coaches
-                      _selectedStudents,
+                      widget.coachId, 
+                      studentIds,
                     );
                     if (widget.onSessionCreated != null)
                       widget.onSessionCreated!();
@@ -352,6 +363,27 @@ class _AddSessionFormState extends State<AddSessionForm> {
       ),
     );
   }
+  Future<List<String>> _getFlattenedStudentIds() async {
+    final List<String> flattenedIds = [];
+    final List<String> groupIds = [];
+
+    for (var item in _selectedStudents) {
+      if (item['type'] == 'student') {
+        flattenedIds.add(item['id']!);
+      } else if (item['type'] == 'group') {
+        groupIds.add(item['id']!);
+      }
+    }
+
+    if (groupIds.isNotEmpty) {
+      final studentService = StudentService();
+      final studentsFromGroups = await studentService.getStudentIdsFromGroupName(groupIds);
+      flattenedIds.addAll(studentsFromGroups);
+    }
+
+    return flattenedIds.toSet().toList(); // Return unique IDs
+  }
+
 
   // Load student names for the given student IDs
   Future<void> _loadStudentNames(List<String> studentIds) async {

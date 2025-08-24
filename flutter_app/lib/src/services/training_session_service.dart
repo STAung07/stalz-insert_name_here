@@ -57,7 +57,6 @@ class TrainingSessionService extends DatabaseService{
   // 
 
   // Create a training session after saving add session form
-  // TODO: replace coach id with list of coach Ids
   Future<void> createTrainingSession(TrainingSessionModel session, String coachId, List<String> studentIds) async {      
       final trainingSessionResponse = await upsertTrainingSession(session);
       if (trainingSessionResponse == null) return;
@@ -69,6 +68,7 @@ class TrainingSessionService extends DatabaseService{
       // } else {
       //   coachIds = await AcademyService().getUsersFromSameAcademy(academyId, 'coach');
       // }
+      print(studentIds);
       await upsertUserSession(sessionId, coachId, 'coach');
       // await batchUpsertUserSession(sessionId, coachIds, 'coach');
       await batchUpsertUserSession(sessionId, studentIds, 'student');

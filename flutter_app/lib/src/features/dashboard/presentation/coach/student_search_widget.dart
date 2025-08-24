@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 
 class StudentSearchWidget extends StatefulWidget {
   /// List of currently selected student IDs
-  final List<String> selectedStudents;
+  final List<Map<String, String>> selectedStudents;
 
   /// Map of student IDs to their names
   final Map<String, String> studentNames;
 
   /// Callback when a student is selected
-  final Function(String id, String name) onStudentSelected;
+  final Function(Map<String, String> selectedItem) onStudentSelected;
 
   /// Callback when a student is removed
   final Function(String id) onStudentRemoved;
@@ -49,8 +49,8 @@ class _StudentSearchWidgetState extends State<StudentSearchWidget> {
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _searchStudents(query);
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      await _searchStudents(query);
     });
   }
 
@@ -103,12 +103,12 @@ class _StudentSearchWidgetState extends State<StudentSearchWidget> {
                               type == 'group' ? Text('Student Group') : null,
                           onTap: () async {
                             if (type == 'student') {
-                              if (!widget.selectedStudents.contains(id)) {
-                                widget.onStudentSelected(id, name);
+                              if (!widget.selectedStudents.any((item) => item['id'] == id)) {
+                                widget.onStudentSelected({'id': id, 'name': name, 'type': 'student'});
                               }
                             } else if (type == 'group') {
-                              if (!widget.selectedStudents.contains(id)) {
-                                widget.onStudentSelected(id, name);
+                              if (!widget.selectedStudents.any((item) => item['id'] == id)) {
+                                widget.onStudentSelected({'id': id, 'name': name, 'type': 'group'});
                               }
                             }
                             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -230,10 +230,10 @@ class _StudentSearchWidgetState extends State<StudentSearchWidget> {
               children:
                   widget.selectedStudents
                       .map(
-                        (id) => Chip(
-                          label: Text(widget.studentNames[id] ?? id),
+                        (item) => Chip(
+                          label: Text(item['name'] ?? 'Unknown'),
                           onDeleted: () {
-                            widget.onStudentRemoved(id);
+                            widget.onStudentRemoved(item['id']!);
                             FocusScope.of(context).unfocus();
                           },
                         ),

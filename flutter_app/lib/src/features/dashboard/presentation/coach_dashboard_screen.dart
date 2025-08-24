@@ -29,9 +29,9 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   final auth = AuthService(); // Assuming you have an AuthService for handling authentication
   final academyService = AcademyService(); // Assuming you have an AcademyService for fetching academies
   bool loading = false;
-  String? myCoachId = '';
-  String? myAcademyId = '';
-  List<String> myAcademyIds = [];
+  String? coachId = '';
+  String? academyId = '';
+  List<String> academyIds = [];
 
   @override
   void initState() {
@@ -41,8 +41,8 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
 
   Future<void> _fetchCoachAcademies() async {
     // Replace with your actual user id getter
-    myCoachId = widget.user.id;
-    myAcademyId = await academyService.fetchAcademyIdsForCoach(myCoachId!);
+    coachId = widget.user.id;
+    academyId = await academyService.fetchAcademyIdsForCoach(coachId!);
 
     setState(() {});
   }
@@ -223,8 +223,8 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
               context.go('/calendar');
             } else if (index == 2) {
               context.go('/coach_profile', extra: {
-                'coachId': myCoachId,
-                'academyId': myAcademyId,
+                'coachId': coachId,
+                'academyId': academyId,
               });
             }
           });

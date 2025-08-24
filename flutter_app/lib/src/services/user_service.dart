@@ -19,12 +19,8 @@ class UserService extends DatabaseService{
   // todo: might need to validate response -> await check response
     final userRole = response['role'] as String;
     final academyId = await AcademyService().getUserAcademy(userId, userRole);
-
-    final userMap = response as Map<String, dynamic>;
+    var userMap = response as Map<String, dynamic>;
     userMap['academy'] = academyId; // Add academyId to the map
-    userMap.forEach((key, value) {
-
-    });
     return UserModel.fromMap(userMap);
   }
 

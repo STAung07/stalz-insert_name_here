@@ -116,8 +116,14 @@ class StudentService extends DatabaseService {
         .toList();
   }
 
+
+
+
   Future<List<StudentGroupModel>> searchStudentGroupsByName(String query, String academyId) async {
     if (query.trim().isEmpty) {
+      return [];
+    }
+    if (academyId == null || academyId.trim().isEmpty) {
       return [];
     }
     try {
@@ -137,6 +143,29 @@ class StudentService extends DatabaseService {
     } catch (e) {
  
       throw Exception('Error searching student groups: $e');
+    }
+  }
+
+
+  Future<List<String>> getStudentIdsFromGroupName(List<String> groupIds) async {
+ if (groupIds.isEmpty) return [];
+    
+    try {
+      final response = await supabase
+          .from('subgroup_students')
+          .select('student_id')
+          .in_('subgroup_id', groupIds);
+          
+      
+      final List<String> studentIds = [];
+      for (var userId in List<dynamic>.from(response)) {
+        studentIds.add(userId['student_id']);
+      }
+      
+      return studentIds;
+    } catch (e) {
+ 
+      throw Exception('Error loading student names: $e');
     }
   }
 }
