@@ -28,7 +28,6 @@ class AuthService {
 
     final userId = user.id;
     final userRole = user.userMetadata?['role'] as String?;
-    final userFullName = user.userMetadata?['full_name'] as String?;
 
 
     final insertResponse = await supabase.
@@ -36,9 +35,7 @@ class AuthService {
       select('id')
       .eq('id', userId)
       .single();
-    print("Insert Response:");
 
-    print(insertResponse);
 
     return userRole;
   }
@@ -69,10 +66,7 @@ class AuthService {
       'role': role.name,
     });
 
-    print("Session:");
-    print(session);
-    print("User ID:");
-    print(userId);
+
     
     return RegisteredUser(id: userId, fullName: fullName, role: role, email: email);
   }

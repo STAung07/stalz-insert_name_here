@@ -84,7 +84,7 @@ class AcademyService extends DatabaseService {
         .from('academies')
         .select('id, name');
     // Optionally, validate response here using checkResponse if needed
-    print('Fetched academies from Service: $response');
+
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -93,7 +93,7 @@ class AcademyService extends DatabaseService {
         .from('academy_students')
         .select('student_id, users(full_name, role)')
         .eq('academy_id', academyId);
-    print('Fetched students in academy with names from service: $response');
+
     return List<Map<String, dynamic>>.from(response);
   }
 

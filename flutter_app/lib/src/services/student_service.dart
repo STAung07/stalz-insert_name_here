@@ -1,5 +1,5 @@
 import 'package:flutter_app/src/models/user_model.dart';
-import 'package:flutter_app/src/services/academy_service.dart';
+import 'package:flutter_app/src/models/student_group_model.dart';
 import 'package:flutter_app/src/services/database_service.dart';
 import 'package:flutter_app/src/services/academy_service.dart';
 
@@ -16,7 +16,7 @@ class StudentService extends DatabaseService {
   /// Returns a list of UserModel objects
   Future<List<UserModel>> getAllStudents() async {
     try {
-      final response = await supabase
+      var response = await supabase
           .from('users')
           .select('*')
           .eq('role', 'student');
@@ -25,7 +25,7 @@ class StudentService extends DatabaseService {
         List<dynamic>.from(response).map((user) => UserModel.fromMap(user))
       );
     } catch (e) {
-      print('Error getting all students: $e');
+ 
       throw Exception('Error getting all students: $e');
     }
   }
@@ -56,7 +56,7 @@ class StudentService extends DatabaseService {
         })
       );
     } catch (e) {
-      print('Error searching students: $e');
+ 
       throw Exception('Error searching students: $e');
     }
   }
@@ -76,7 +76,7 @@ class StudentService extends DatabaseService {
         List<dynamic>.from(response).map((user) => UserModel.fromMap(user))
       );
     } catch (e) {
-      print('Error getting students by IDs: $e');
+ 
       throw Exception('Error getting students by IDs: $e');
     }
   }
@@ -100,8 +100,43 @@ class StudentService extends DatabaseService {
       
       return studentNames;
     } catch (e) {
-      print('Error loading student names: $e');
+ 
       throw Exception('Error loading student names: $e');
+    }
+  }
+
+  Future<List<StudentGroupModel>> getStudentGroups(String academyId) async {
+    final response = await supabase
+        .from('student_groups')
+        .select()
+        .eq('academy_id', academyId);
+
+    return (response as List)
+        .map((e) => StudentGroupModel.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<StudentGroupModel>> searchStudentGroupsByName(String query, String academyId) async {
+    if (query.trim().isEmpty) {
+      return [];
+    }
+    try {
+      final response = await supabase
+          .from('academy_subgroups')
+          .select()
+          .eq('academy_id', academyId)
+          .ilike('name', '%$query%')
+          .limit(10);
+
+      if (response == null) {
+        return [];
+      }
+      return (response as List)
+          .map((e) => StudentGroupModel.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+ 
+      throw Exception('Error searching student groups: $e');
     }
   }
 }

@@ -23,7 +23,7 @@ class UserService extends DatabaseService{
     final userMap = response as Map<String, dynamic>;
     userMap['academy'] = academyId; // Add academyId to the map
     userMap.forEach((key, value) {
-      print('Key: $key, Value: $value');
+
     });
     return UserModel.fromMap(userMap);
   }
