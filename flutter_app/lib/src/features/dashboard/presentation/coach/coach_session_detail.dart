@@ -23,12 +23,14 @@ class CoachSessionDetail extends StatefulWidget {
 
 class _CoachSessionDetailState extends State<CoachSessionDetail> {
   final Map<String, String> _studentNames = {};
+  final Map<String, String> _studentAttendanceStatus = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadStudentNames();
+    _loadStudentAttendanceStatus();
   }
 
   Future<void> _loadStudentNames() async {
@@ -38,17 +40,46 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
       });
       return;
     }
-    
+
     try {
       final studentService = StudentService();
       final studentNames = await studentService.loadStudentNames(widget.session.studentIds);
-      
+
       setState(() {
         _studentNames.addAll(studentNames);
-        _isLoading = false;
+        // Keep _isLoading true until both names and statuses are loaded
       });
     } catch (e) {
       print('Error loading student names: $e');
+      print('Student names loaded: $_studentNames');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadStudentAttendanceStatus() async {
+    if (widget.session.sessionId == null || widget.session.studentIds.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final studentService = StudentService();
+      final attendanceStatuses = await studentService.getAttendanceStatusesForSession(
+        widget.session.sessionId!,
+        widget.session.studentIds,
+      );
+
+      setState(() {
+        _studentAttendanceStatus.addAll(attendanceStatuses);
+        _isLoading = false; // Set to false after both are loaded
+      });
+    } catch (e) {
+      print('Error loading student attendance statuses: $e');
+      print('Student attendance statuses loaded: $_studentAttendanceStatus');
       setState(() {
         _isLoading = false;
       });
@@ -133,11 +164,17 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                 : Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: widget.session.studentIds
-                        .map(
-                          (id) => Chip(label: Text(_studentNames[id] ?? id)),
-                        )
-                        .toList(),
+                    children: widget.session.studentIds.map((id) {
+                      final status = _studentAttendanceStatus[id];
+                      double opacity = 1.0;
+                      if (status == 'No' || status == 'Maybe') {
+                        opacity = 0.4;
+                      }
+                      return Opacity(
+                        opacity: opacity,
+                        child: Chip(label: Text((_studentNames[id] ?? id).toString())),
+                      );
+                    }).toList(),
                   ),
 
               const SizedBox(height: 80), // Space for the fixed buttons

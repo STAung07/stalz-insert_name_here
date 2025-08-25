@@ -169,7 +169,7 @@ class TrainingSessionService extends DatabaseService{
           .from('session_attendance')
           .select('student_id')
           .eq('session_id', sessionId)
-          .eq('status', 'yes');
+          .eq('status', 'Yes');
 
       final attendanceCount = response.length;
 

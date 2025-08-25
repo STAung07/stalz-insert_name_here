@@ -168,21 +168,21 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('yes'),
+                      onPressed: () => _updateAttendance('Yes'),
                       child: const Text('Yes', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('no'),
+                      onPressed: () => _updateAttendance('No'),
                       child: const Text('No', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('maybe'),
+                      onPressed: () => _updateAttendance('Maybe'),
                       child: const Text('Maybe', style: TextStyle(fontSize: 12)),
                     ),
                   ),
