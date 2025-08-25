@@ -28,7 +28,20 @@ class MyApp extends StatelessWidget {
                   return DashboardScreen(userId: AppUser.fromSupabase(currentUser).id);
                 }
               ),
-        GoRoute(path: '/calendar', builder: (_, __) => const CalendarViewScreen()),
+        GoRoute(
+          path: '/calendar',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final userId = extra?['userId'] as String?;
+            final userRole = extra?['userRole'] as String?;
+            final academyId = extra?['academyId'] as String?;
+
+            if (userId == null || userRole == null || academyId == null) {
+              return const Scaffold(body: Center(child: Text('Missing user ID or role or academyId')));
+            }
+            return CalendarViewScreen(userId: userId, userRole: userRole, academyId: academyId);
+          },
+        ),
         GoRoute(
           path: '/coach_profile',
           builder: (context, state) {
@@ -36,7 +49,6 @@ class MyApp extends StatelessWidget {
             final coachId = extra?['coachId'] as String?;
             final academyId = extra?['academyId'] as String?;
             // Check if coachId and academyId are provided
-            print('Coach ID: $coachId, Academy ID: $academyId');
             if (coachId == null || academyId == null) {
               return const Scaffold(body: Center(child: Text('Missing coach or academy ID')));
             }

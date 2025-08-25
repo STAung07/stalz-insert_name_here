@@ -186,6 +186,7 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                   child: AddSessionForm(
                                     sessionId: widget.session.sessionId,
                                     coachId: widget.coachId,
+                                    academyId: widget.session.academyId,
                                     initialSession: widget.session, // for edit
                                     onSessionCreated: () async {
                                         await Future.delayed(

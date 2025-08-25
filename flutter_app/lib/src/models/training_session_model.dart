@@ -43,6 +43,7 @@ class TrainingSessionModel {
   Map<String, dynamic> toJsonMap(TrainingSessionModel session) {
     final Map<String, Object> data = {
       'title': session.title,
+      'academy_id': session.academyId,
       'start_time': session.startTime.toIso8601String(),
       'end_time': session.endTime.toIso8601String(),
       'location': session.location,

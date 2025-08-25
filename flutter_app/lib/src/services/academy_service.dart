@@ -21,7 +21,7 @@ class AcademyService extends DatabaseService {
     } else {
       return null; // Or throw an error for unsupported roles
     }
-
+    
     final response = await supabase
         .from(tableName)
         .select('academy_id')
@@ -31,7 +31,6 @@ class AcademyService extends DatabaseService {
     if (response == null) {
       return null;
     }
-
     return response['academy_id'] as String?;
   }
 

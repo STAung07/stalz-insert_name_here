@@ -1,5 +1,5 @@
 import 'package:flutter_app/src/models/training_session_model.dart';
-import 'package:flutter_app/src/services/academy_service.dart';
+
 import 'package:flutter_app/src/services/database_service.dart';
 
 class TrainingSessionService extends DatabaseService{
@@ -31,7 +31,7 @@ class TrainingSessionService extends DatabaseService{
     return sessionIds;
   }
 
-  Future<List<TrainingSessionModel>> getSessionsBySessionIds(List<String> sessionIds, int days) async {
+  Future<List<TrainingSessionModel>> getSessionsBySessionIdsAndDays(List<String> sessionIds, int days) async {
     final DateTime queryEndDate = DateTime.now().add(Duration(days: days));
     if (sessionIds.isEmpty) {
       return [];
@@ -46,6 +46,24 @@ class TrainingSessionService extends DatabaseService{
     return sessions;
   }
 
+  Future<List<TrainingSessionModel>> getAllTrainingSessionsByUserId(String userId, String userRole) async {
+    TrainingSessionService sessionService = TrainingSessionService();
+    final sessionIds = await sessionService.getSessionsIdsByUserId(
+      userId, userRole
+    );
+    if (sessionIds.isEmpty) {
+      return [];
+    }
+
+    final response = await supabase
+        .from('training_sessions')
+        .select()
+        .in_('id', sessionIds);
+    List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
+    return sessions;
+  }
+
+
   // TrainingSessionModel buildSessionModel (String title, String academyId, String description, DateTime startTime, DateTime endTime, String location) {
   //   return TrainingSessionModel(
   //     title: title,
@@ -57,20 +75,20 @@ class TrainingSessionService extends DatabaseService{
   // 
 
   // Create a training session after saving add session form
-  // TODO: replace coach id with list of coach Ids
   Future<void> createTrainingSession(TrainingSessionModel session, String coachId, List<String> studentIds) async {      
       final trainingSessionResponse = await upsertTrainingSession(session);
       if (trainingSessionResponse == null) return;
       final sessionId = trainingSessionResponse['id'];
-      final academyId = await AcademyService().getUserAcademy(coachId, 'coach');
-      List<String> coachIds = [];
-      if (academyId == null) {
-        coachIds = [coachId];
-      } else {
-        coachIds = await AcademyService().getUsersFromSameAcademy(academyId, 'coach');
-      }
-      // await upsertUserSession(sessionId, coachId, 'coach');
-      await batchUpsertUserSession(sessionId, coachIds, 'coach');
+      // final academyId = await AcademyService().getUserAcademy(coachId, 'coach');
+      // List<String> coachIds = [];
+      // if (academyId == null) {
+      //   coachIds = [coachId];
+      // } else {
+      //   coachIds = await AcademyService().getUsersFromSameAcademy(academyId, 'coach');
+      // }
+      print(studentIds);
+      await upsertUserSession(sessionId, coachId, 'coach');
+      // await batchUpsertUserSession(sessionId, coachIds, 'coach');
       await batchUpsertUserSession(sessionId, studentIds, 'student');
   }
 
