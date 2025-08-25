@@ -163,4 +163,19 @@ class TrainingSessionService extends DatabaseService{
         .delete()
         .eq('session_id', sessionId);
     }
+
+    Future<void> updateAttendanceCount(String sessionId) async {
+      final response = await supabase
+          .from('session_attendance')
+          .select('student_id')
+          .eq('session_id', sessionId)
+          .eq('status', 'yes');
+
+      final attendanceCount = response.length;
+
+      await supabase
+          .from('training_sessions')
+          .update({'attendance_count': attendanceCount})
+          .eq('id', sessionId);
+    }
 }

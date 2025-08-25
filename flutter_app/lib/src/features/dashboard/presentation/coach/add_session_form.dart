@@ -366,6 +366,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       studentIds: studentIds,
                       trainingPlan: _trainingPlanController.text,
                       feedback: _feedbackController.text,
+                      attendanceCount: 0,
                     );
 
                     TrainingSessionService().createTrainingSession(

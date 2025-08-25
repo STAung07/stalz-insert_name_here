@@ -34,6 +34,7 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
       setState(() {
         _attendanceStatus = status;
       });
+      await TrainingSessionService().updateAttendanceCount(widget.session.sessionId!);
     } catch (e) {
       print('Error updating attendance status: $e');
     }
@@ -167,21 +168,21 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('Yes'),
+                      onPressed: () => _updateAttendance('yes'),
                       child: const Text('Yes', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('No'),
+                      onPressed: () => _updateAttendance('no'),
                       child: const Text('No', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateAttendance('Maybe'),
+                      onPressed: () => _updateAttendance('maybe'),
                       child: const Text('Maybe', style: TextStyle(fontSize: 12)),
                     ),
                   ),

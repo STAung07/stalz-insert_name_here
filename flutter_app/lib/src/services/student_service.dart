@@ -154,11 +154,33 @@ class StudentService extends DatabaseService {
           .select('status')
           .eq('session_id', sessionId)
           .eq('student_id', studentId)
-          .single();
-      return response['status'] as String?;
+      .single();
+     return response['status'] as String?;
+   } 
+   catch (e) {
+       print('Error getting attendance status: $e');
+       return null;
+     }
+   }
+
+  Future<Map<String, String>> getAttendanceStatusesForSession(String sessionId, List<String> studentIds) async {
+    if (studentIds.isEmpty) return {};
+
+    try {
+      final response = await supabase
+          .from('session_attendance')
+          .select('student_id, status')
+          .eq('session_id', sessionId)
+          .in_('student_id', studentIds);
+
+      final Map<String, String> statuses = {};
+      for (var item in response) {
+        statuses[item['student_id']] = item['status'];
+      }
+      return statuses;
     } catch (e) {
-      print('Error getting attendance status: $e');
-      return null;
+      print('Error getting attendance statuses for session: $e');
+      return {};
     }
   }
 

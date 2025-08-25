@@ -125,6 +125,8 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
 
               // Students
               Text('Students', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 4),
+              Text('Attendance: ${widget.session.attendanceCount ?? 0} students'),
               const SizedBox(height: 8),
               _isLoading
                 ? Center(child: CircularProgressIndicator())
