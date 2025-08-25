@@ -5,6 +5,7 @@ import 'package:flutter_app/src/services/auth_service.dart';
 import 'package:flutter_app/src/features/dashboard/presentation/common/session_list.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
+import 'package:flutter_app/src/services/academy_service.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +29,9 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
       GlobalKey<SessionListState>();
   final auth =
       AuthService(); // Assuming you have an AuthService for handling authentication
+
   bool loading = false;
+
 
   void _signOut(BuildContext context) async {
     setState(() {
@@ -68,7 +71,6 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-
                 ActionButton(
                   icon: Icons.bar_chart,
                   label: 'View Stats',
@@ -109,7 +111,11 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    SessionList(key: _sessionListKey, userId: widget.user.id, userRole: widget.user.role),
+                    SessionList(
+                      key: _sessionListKey,
+                      userId: widget.user.id,
+                      userRole: widget.user.role,
+                    ),
                   ],
                 ),
               ),
@@ -162,7 +168,27 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         onTap: (index) {
-          // Handle navigation
+          if (index == 0) {
+            context.go('/dashboard');
+          } else if (index == 1) {
+            context.go(
+              '/calendar',
+              extra: {
+                'userId': widget.user.id,
+                'userRole': widget.user.role,
+                'academyId': widget.user.academy,
+              },
+            );
+          } else if (index == 2) {
+            context.go(
+              '/student_profile',
+              extra: {
+                'coachId': widget.user.id,
+                'userRole': widget.user.role,
+                'academyId': widget.user.academy,
+              },
+            );
+          }
         },
       ),
     );

@@ -26,8 +26,8 @@ class CoachDashboardScreen extends StatefulWidget {
 class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   final GlobalKey<SessionListState> _sessionListKey =
       GlobalKey<SessionListState>();
-  final auth = AuthService(); // Assuming you have an AuthService for handling authentication
-  final academyService = AcademyService(); // Assuming you have an AcademyService for fetching academies
+  final auth = AuthService();
+  final academyService = AcademyService(); 
   bool loading = false;
   String? coachId = '';
   String? academyId = '';
@@ -220,11 +220,11 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
             if (index == 0) {
               context.go('/dashboard');
             } else if (index == 1) {
-              context.go('/calendar');
+              context.go('/calendar', extra: {'userId': widget.user.id, 'userRole': widget.user.role, 'academyId': widget.user.academy});
             } else if (index == 2) {
               context.go('/coach_profile', extra: {
-                'coachId': coachId,
-                'academyId': academyId,
+                'coachId': widget.user.id,
+                'academyId': widget.user.academy,
               });
             }
           });

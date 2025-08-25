@@ -31,7 +31,7 @@ class TrainingSessionService extends DatabaseService{
     return sessionIds;
   }
 
-  Future<List<TrainingSessionModel>> getSessionsBySessionIds(List<String> sessionIds, int days) async {
+  Future<List<TrainingSessionModel>> getSessionsBySessionIdsAndDays(List<String> sessionIds, int days) async {
     final DateTime queryEndDate = DateTime.now().add(Duration(days: days));
     if (sessionIds.isEmpty) {
       return [];
@@ -45,6 +45,24 @@ class TrainingSessionService extends DatabaseService{
     List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
     return sessions;
   }
+
+  Future<List<TrainingSessionModel>> getAllTrainingSessionsByUserId(String userId, String userRole) async {
+    TrainingSessionService sessionService = TrainingSessionService();
+    final sessionIds = await sessionService.getSessionsIdsByUserId(
+      userId, userRole
+    );
+    if (sessionIds.isEmpty) {
+      return [];
+    }
+
+    final response = await supabase
+        .from('training_sessions')
+        .select()
+        .in_('id', sessionIds);
+    List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
+    return sessions;
+  }
+
 
   // TrainingSessionModel buildSessionModel (String title, String academyId, String description, DateTime startTime, DateTime endTime, String location) {
   //   return TrainingSessionModel(

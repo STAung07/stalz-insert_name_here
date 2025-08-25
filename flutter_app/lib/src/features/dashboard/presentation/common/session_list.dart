@@ -20,16 +20,16 @@ class SessionListState extends State<SessionList> {
   @override
   void initState() {
     super.initState();
-    _futureSessions = fetchSessions(widget.userId, widget.userRole);
+    _futureSessions = fetchSortedSessions(widget.userId, widget.userRole);
   }
 
-  Future<List<TrainingSessionModel>> fetchSessions(String userId, userRole) async {
+  Future<List<TrainingSessionModel>> fetchSortedSessions(String userId, userRole) async {
     print("userId: $userId, userRole: $userRole");
     TrainingSessionService sessionService = TrainingSessionService();
     final sessionIdsResponse = await sessionService.getSessionsIdsByUserId(
       userId, userRole
     );
-    final sessionsResponse = await sessionService.getSessionsBySessionIds(
+    final sessionsResponse = await sessionService.getSessionsBySessionIdsAndDays(
       sessionIdsResponse,
       7,
     );
@@ -42,7 +42,7 @@ class SessionListState extends State<SessionList> {
 
   void refreshSessions() {
     setState(() {
-      _futureSessions = fetchSessions(widget.userId, widget.userRole);
+      _futureSessions = fetchSortedSessions(widget.userId, widget.userRole);
     });
   }
 

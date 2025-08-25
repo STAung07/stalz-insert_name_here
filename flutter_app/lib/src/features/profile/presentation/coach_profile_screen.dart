@@ -401,7 +401,12 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
             if (index == 0) {
               context.go('/dashboard');
             } else if (index == 1) {
-              context.go('/calendar');
+              context.go('/calendar', extra: {'userId': widget.coachId, 'userRole': 'coach', 'academyId': widget.academyId});
+            } else if (index == 2) {
+              context.go('/coach_profile', extra: {
+                'coachId': widget.coachId,
+                'academyId': widget.academyId,
+              });
             }
           });
         },
