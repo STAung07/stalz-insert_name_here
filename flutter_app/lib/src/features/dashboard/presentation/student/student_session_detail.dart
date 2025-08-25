@@ -93,14 +93,16 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
     final screenSize = MediaQuery.of(context).size;
 
     return Dialog(
-      child: SizedBox(
-        width: screenSize.width * 0.95,
-        height: screenSize.height * 0.75,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Stack(
+        children: [
+          SizedBox(
+            width: screenSize.width * 0.95,
+            height: screenSize.height * 0.75,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // Title
               Text(
                 widget.session.title,
@@ -206,35 +208,23 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                         )
                         .toList(),
                   ),
-
-              const Spacer(),
-
-              // Action Buttons
-              Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.stretch, // Stretch buttons horizontally
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: Text('Cancel'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                ],
-              ),
+              const SizedBox(height: 16), // Add some padding at the bottom
             ],
           ),
         ),
       ),
-    );
-  }
+      Positioned(
+        bottom: 16,
+        left: 16,
+        right: 16,
+        child: ElevatedButton(
+          // style: ElevatedButton.styleFrom(
+          //   backgroundColor: Theme.of(context).colorScheme.error,
+          // ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    ],
+  ));}
 }
