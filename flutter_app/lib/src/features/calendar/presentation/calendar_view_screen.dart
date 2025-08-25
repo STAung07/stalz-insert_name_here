@@ -3,6 +3,7 @@ import 'package:calendar_view/calendar_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
 import '../../dashboard/presentation/coach/coach_session_detail.dart';
+import '../../dashboard/presentation/student/student_session_detail.dart';
 import '../../../models/training_session_model.dart';
 import '../../../services/training_session_service.dart';
 
@@ -91,15 +92,15 @@ class CalendarViewScreen extends StatefulWidget {
               // showLiveTimeLineInAllDays: false,
               controller: _eventController,
                onEventTap: (event, date) {
-                 if (widget.userRole == 'coach') {
-                   // Find the TrainingSessionModel corresponding to the tapped event
-                   final CalendarEventData<Object?>? foundEvent = _eventController.events.firstWhere(
-                     (e) => e.date == event.date && e.title == event.title && e.description == event.description,
-                     orElse: () => CalendarEventData(title: '', date: DateTime.now(), event: null),
-                   );
-                   final TrainingSessionModel? session = foundEvent?.event as TrainingSessionModel?;
+                 // Find the TrainingSessionModel corresponding to the tapped event
+                 final CalendarEventData<Object?>? foundEvent = _eventController.events.firstWhere(
+                   (e) => e.date == event.date && e.title == event.title && e.description == event.description,
+                   orElse: () => CalendarEventData(title: '', date: DateTime.now(), event: null),
+                 );
+                 final TrainingSessionModel? session = foundEvent?.event as TrainingSessionModel?;
 
-                   if (session != null) {
+                 if (session != null) {
+                   if (widget.userRole == 'coach') {
                      showDialog(
                        context: context,
                        builder: (context) => CoachSessionDetail(
@@ -113,11 +114,26 @@ class CalendarViewScreen extends StatefulWidget {
                          },
                        ),
                      );
+                   } else if (widget.userRole == 'student') {
+                     showDialog(
+                       context: context,
+                       builder: (context) => StudentSessionDetail(
+                         session: session,
+                         studentId: widget.userId,
+                         onRefresh: () {
+                           // Refresh the calendar after editing/deleting a session
+                           setState(() {
+                             _futureSessions = _fetchAndPopulateSessions();
+                           });
+                         },
+                       ),
+                     );
                    } else {
-                     // Fallback to generic dialog if session not found
+                     // Fallback to generic dialog if userRole is neither coach nor student
                      _showGenericEventDialog(context, event);
                    }
                  } else {
+                   // Fallback to generic dialog if session not found
                    _showGenericEventDialog(context, event);
                  }
                },
