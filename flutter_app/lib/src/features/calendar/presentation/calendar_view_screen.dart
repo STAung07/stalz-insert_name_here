@@ -61,13 +61,15 @@ class CalendarViewScreen extends StatefulWidget {
 
   Future<List<TrainingSessionModel>> _fetchAndPopulateSessions() async {
     final sessions = await TrainingSessionService().getAllTrainingSessionsByUserId(widget.userId, widget.userRole);
+    _eventController.removeAll(_eventController.events.toList()); // Clear existing events to prevent duplicates
     _eventController.addAll(sessions.map((session) {
-      return CalendarEventData(
+      return CalendarEventData<TrainingSessionModel>(
         date: session.startTime,
         title: session.title,
         description: session.trainingPlan,
         startTime: session.startTime,
         endTime: session.endTime,
+        event: session,
       );
     }).toList());
     return sessions;
@@ -93,7 +95,7 @@ class CalendarViewScreen extends StatefulWidget {
                    // Find the TrainingSessionModel corresponding to the tapped event
                    final CalendarEventData<Object?>? foundEvent = _eventController.events.firstWhere(
                      (e) => e.date == event.date && e.title == event.title && e.description == event.description,
-                     orElse: () => CalendarEventData(title: 'N/A', date: DateTime.now(), event: null),
+                     orElse: () => CalendarEventData(title: '', date: DateTime.now(), event: null),
                    );
                    final TrainingSessionModel? session = foundEvent?.event as TrainingSessionModel?;
 
