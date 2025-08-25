@@ -147,6 +147,31 @@ class StudentService extends DatabaseService {
   }
 
 
+  Future<String?> getAttendanceStatus(String sessionId, String studentId) async {
+    try {
+      final response = await supabase
+          .from('session_attendance')
+          .select('status')
+          .eq('session_id', sessionId)
+          .eq('student_id', studentId)
+          .single();
+      return response['status'] as String?;
+    } catch (e) {
+      print('Error getting attendance status: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateAttendanceStatus(String sessionId, String studentId, String status) async {
+    await supabase.from('session_attendance').upsert(
+      {
+        'session_id': sessionId,
+        'student_id': studentId,
+        'status': status,
+      }
+    );
+  }
+
   Future<List<String>> getStudentIdsFromGroupName(List<String> groupIds) async {
  if (groupIds.isEmpty) return [];
     

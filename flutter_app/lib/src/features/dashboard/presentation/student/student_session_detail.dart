@@ -3,6 +3,9 @@ import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/student_service.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter_app/src/services/training_session_service.dart';
+import '../../../../models/training_session_model.dart';
+
 class StudentSessionDetail extends StatefulWidget {
   final TrainingSessionModel session;
   final String studentId;
@@ -20,13 +23,45 @@ class StudentSessionDetail extends StatefulWidget {
 }
 
 class _StudentSessionDetailState extends State<StudentSessionDetail> {
+  Future<void> _updateAttendance(String status) async {
+    try {
+      final studentService = StudentService();
+      await studentService.updateAttendanceStatus(
+        widget.session.sessionId!,
+        widget.studentId,
+        status,
+      );
+      setState(() {
+        _attendanceStatus = status;
+      });
+    } catch (e) {
+      print('Error updating attendance status: $e');
+    }
+  }
   final Map<String, String> _studentNames = {};
   bool _isLoading = true;
+  String? _attendanceStatus;
 
   @override
   void initState() {
     super.initState();
     _loadStudentNames();
+    _loadAttendanceStatus();
+  }
+
+  Future<void> _loadAttendanceStatus() async {
+    try {
+      final studentService = StudentService();
+      final status = await studentService.getAttendanceStatus(
+        widget.session.sessionId!,
+        widget.studentId,
+      );
+      setState(() {
+        _attendanceStatus = status;
+      });
+    } catch (e) {
+      print('Error loading attendance status: $e');
+    }
   }
 
   Future<void> _loadStudentNames() async {
@@ -81,7 +116,7 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                   Text(widget.session.location),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Icon(Icons.access_time, size: 20),
@@ -116,6 +151,44 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
               Text('Feedback', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
               Text(widget.session.feedback),
+
+              const Divider(height: 24),
+
+              // Attendance Status
+              Text(
+                'Are you going?',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('Yes'),
+                      child: const Text('Yes', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('No'),
+                      child: const Text('No', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('Maybe'),
+                      child: const Text('Maybe', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text('Current Status: ${_attendanceStatus ?? 'N/A'}'),
+              ),
 
               const Divider(height: 24),
 
