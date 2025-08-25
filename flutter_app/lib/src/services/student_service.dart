@@ -147,6 +147,53 @@ class StudentService extends DatabaseService {
   }
 
 
+  Future<String?> getAttendanceStatus(String sessionId, String studentId) async {
+    try {
+      final response = await supabase
+          .from('session_attendance')
+          .select('status')
+          .eq('session_id', sessionId)
+          .eq('student_id', studentId)
+      .single();
+     return response['status'] as String?;
+   } 
+   catch (e) {
+       print('Error getting attendance status: $e');
+       return null;
+     }
+   }
+
+  Future<Map<String, String>> getAttendanceStatusesForSession(String sessionId, List<String> studentIds) async {
+    if (studentIds.isEmpty) return {};
+
+    try {
+      final response = await supabase
+          .from('session_attendance')
+          .select('student_id, status')
+          .eq('session_id', sessionId)
+          .in_('student_id', studentIds);
+
+      final Map<String, String> statuses = {};
+      for (var item in response) {
+        statuses[item['student_id']] = item['status'];
+      }
+      return statuses;
+    } catch (e) {
+      print('Error getting attendance statuses for session: $e');
+      return {};
+    }
+  }
+
+  Future<void> updateAttendanceStatus(String sessionId, String studentId, String status) async {
+    await supabase.from('session_attendance').upsert(
+      {
+        'session_id': sessionId,
+        'student_id': studentId,
+        'status': status,
+      }
+    );
+  }
+
   Future<List<String>> getStudentIdsFromGroupName(List<String> groupIds) async {
  if (groupIds.isEmpty) return [];
     

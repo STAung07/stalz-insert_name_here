@@ -3,6 +3,9 @@ import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/student_service.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter_app/src/services/training_session_service.dart';
+import '../../../../models/training_session_model.dart';
+
 class StudentSessionDetail extends StatefulWidget {
   final TrainingSessionModel session;
   final String studentId;
@@ -20,13 +23,46 @@ class StudentSessionDetail extends StatefulWidget {
 }
 
 class _StudentSessionDetailState extends State<StudentSessionDetail> {
+  Future<void> _updateAttendance(String status) async {
+    try {
+      final studentService = StudentService();
+      await studentService.updateAttendanceStatus(
+        widget.session.sessionId!,
+        widget.studentId,
+        status,
+      );
+      setState(() {
+        _attendanceStatus = status;
+      });
+      await TrainingSessionService().updateAttendanceCount(widget.session.sessionId!);
+    } catch (e) {
+      print('Error updating attendance status: $e');
+    }
+  }
   final Map<String, String> _studentNames = {};
   bool _isLoading = true;
+  String? _attendanceStatus;
 
   @override
   void initState() {
     super.initState();
     _loadStudentNames();
+    _loadAttendanceStatus();
+  }
+
+  Future<void> _loadAttendanceStatus() async {
+    try {
+      final studentService = StudentService();
+      final status = await studentService.getAttendanceStatus(
+        widget.session.sessionId!,
+        widget.studentId,
+      );
+      setState(() {
+        _attendanceStatus = status;
+      });
+    } catch (e) {
+      print('Error loading attendance status: $e');
+    }
   }
 
   Future<void> _loadStudentNames() async {
@@ -58,14 +94,16 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
     final screenSize = MediaQuery.of(context).size;
 
     return Dialog(
-      child: SizedBox(
-        width: screenSize.width * 0.95,
-        height: screenSize.height * 0.75,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Stack(
+        children: [
+          SizedBox(
+            width: screenSize.width * 0.95,
+            height: screenSize.height * 0.75,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // Title
               Text(
                 widget.session.title,
@@ -81,7 +119,7 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                   Text(widget.session.location),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Icon(Icons.access_time, size: 20),
@@ -119,6 +157,44 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
 
               const Divider(height: 24),
 
+              // Attendance Status
+              Text(
+                'Are you going?',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('Yes'),
+                      child: const Text('Yes', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('No'),
+                      child: const Text('No', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAttendance('Maybe'),
+                      child: const Text('Maybe', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text('Current Status: ${_attendanceStatus ?? 'N/A'}'),
+              ),
+
+              const Divider(height: 24),
+
               // Students
               Text('Students', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
@@ -133,35 +209,23 @@ class _StudentSessionDetailState extends State<StudentSessionDetail> {
                         )
                         .toList(),
                   ),
-
-              const Spacer(),
-
-              // Action Buttons
-              Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.stretch, // Stretch buttons horizontally
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: Text('Cancel'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                ],
-              ),
+              const SizedBox(height: 16), // Add some padding at the bottom
             ],
           ),
         ),
       ),
-    );
-  }
+      Positioned(
+        bottom: 16,
+        left: 16,
+        right: 16,
+        child: ElevatedButton(
+          // style: ElevatedButton.styleFrom(
+          //   backgroundColor: Theme.of(context).colorScheme.error,
+          // ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    ],
+  ));}
 }

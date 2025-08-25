@@ -10,6 +10,7 @@ class TrainingSessionModel {
   final List<String> studentIds;
   final String trainingPlan;
   final String feedback;
+  final int attendanceCount;
 
   TrainingSessionModel({
     this.sessionId,
@@ -23,6 +24,7 @@ class TrainingSessionModel {
     required this.studentIds,
     required this.trainingPlan,
     required this.feedback,
+    required this.attendanceCount,
   });
   factory TrainingSessionModel.fromMap(Map<String, dynamic> map) {
     return TrainingSessionModel(
@@ -37,6 +39,7 @@ class TrainingSessionModel {
       studentIds: List<String>.from(map['student_ids'] ?? []),
       trainingPlan: map['training_plan'] ?? '',
       feedback: map['feedback'] ?? '',
+      attendanceCount: map['attendance_count'] ?? 0,
     );
   }
 
@@ -52,6 +55,7 @@ class TrainingSessionModel {
       'student_ids': session.studentIds,
       'training_plan': session.trainingPlan,
       'feedback': session.feedback,
+      'attendance_count': session.attendanceCount,
     };
     if (session.sessionId != null) {
       data['id'] = session.sessionId!;
