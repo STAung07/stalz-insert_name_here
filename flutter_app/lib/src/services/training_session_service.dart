@@ -147,5 +147,20 @@ class TrainingSessionService extends DatabaseService{
       }
     }
 
-    
+    Future<void> deleteTrainingSession(String sessionId) async {
+      await supabase
+        .from('training_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      await supabase
+        .from('session_coaches')
+        .delete()
+        .eq('session_id', sessionId);
+
+      await supabase
+        .from('session_attendance')
+        .delete()
+        .eq('session_id', sessionId);
+    }
 }
