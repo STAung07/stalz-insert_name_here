@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/features/dashboard/presentation/coach/add_session_form.dart';
 import 'package:flutter_app/src/services/student_service.dart';
+import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:intl/intl.dart';
 
 class CoachSessionDetail extends StatefulWidget {
@@ -217,8 +218,11 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                   ),
                   SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       // delete logic
+                      await TrainingSessionService().deleteTrainingSession(widget.session.sessionId!);
+                      widget.onRefresh?.call();
+                      Navigator.of(context).pop();
                     },
                     icon: Icon(Icons.delete),
                     label: Text('Delete'),
