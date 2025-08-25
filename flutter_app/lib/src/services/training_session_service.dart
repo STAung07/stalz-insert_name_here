@@ -40,7 +40,7 @@ class TrainingSessionService extends DatabaseService{
         .from('training_sessions')
         .select()
         .in_('id', sessionIds)
-        .gte('start_time', DateTime.now().toIso8601String())
+        .gte('end_time', DateTime.now().toIso8601String())
         .lte('start_time', queryEndDate.toIso8601String());
     List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
     return sessions;
@@ -59,6 +59,23 @@ class TrainingSessionService extends DatabaseService{
         .from('training_sessions')
         .select()
         .in_('id', sessionIds);
+    List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
+    return sessions;
+  }
+
+  Future<List<TrainingSessionModel>> getSessionsByUserIdAndDateRange(String userId, String userRole, DateTime startDate, DateTime endDate) async {
+    final sessionIds = await getSessionsIdsByUserId(userId, userRole);
+    if (sessionIds.isEmpty) {
+      return [];
+    }
+
+    final response = await supabase
+        .from('training_sessions')
+        .select()
+        .in_('id', sessionIds)
+        .gte('start_time', startDate.toIso8601String())
+        .lte('start_time', endDate.toIso8601String());
+
     List<TrainingSessionModel> sessions = response.map<TrainingSessionModel>((sessionData) => TrainingSessionModel.fromMap(sessionData)).toList();
     return sessions;
   }

@@ -26,6 +26,7 @@ class CoachDashboardScreen extends StatefulWidget {
 class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   final GlobalKey<SessionListState> _sessionListKey =
       GlobalKey<SessionListState>();
+  final GlobalKey<StatsOverviewState> _statsOverviewKey = GlobalKey<StatsOverviewState>();
   final auth = AuthService();
   final academyService = AcademyService(); 
   bool loading = false;
@@ -176,13 +177,26 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Stats Overview',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Stats Overview',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh, size: 20),
+                          tooltip: 'Refresh stats',
+                          onPressed: () {
+                            _statsOverviewKey.currentState?.fetchSessionStats();
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     // Add your stats widgets here
-                    const StatsOverview(),
+                    StatsOverview(key: _statsOverviewKey, user: widget.user),
                   ],
                 ),
               ),
