@@ -47,9 +47,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _register() async {
+    // Must select a role
     if (selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a role')),
+      );
+      return;
+    }
+
+    // Must select an academy
+    if (selectedAcademyId == null || selectedAcademyId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an academy')),
       );
       return;
     }
@@ -64,14 +73,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         role: role, // Pass the selected role
       );
       
-      // Check if userId is null, which means registration failed
-      if (registeredUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed. Please try again.')),
-        );
-        return;
-      }
-      // ...existing code...
+      // // Check if userId is null, which means registration failed
+      // if (registeredUser == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Registration failed. Please try again.')),
+      //   );
+      //   return;
+      // }
+
       if (selectedAcademyId != null && selectedAcademyId!.isNotEmpty) {
         final userId = registeredUser.id;
         if (selectedRole == 'coach') {
@@ -121,15 +130,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               value: selectedAcademyId,
-              items: [
-                const DropdownMenuItem(value: null, child: Text('No Academy (optional)')),
-                ...academies.map((academy) => DropdownMenuItem(
-                  value: academy['id'] as String,
-                  child: Text(academy['name'] as String),
-                )),
-              ],
+              items: academies.map((academy) => DropdownMenuItem(
+                value: academy['id'] as String,
+                child: Text(academy['name'] as String),
+              )).toList(),
               onChanged: (value) => setState(() => selectedAcademyId = value),
-              decoration: const InputDecoration(labelText: 'Select Academy (optional)'),
+              decoration: const InputDecoration(labelText: 'Select Academy'),
+              validator: (value) => value == null || value.isEmpty ? 'Please select an academy' : null,
             ),
             const SizedBox(height: 20),
             SizedBox(
