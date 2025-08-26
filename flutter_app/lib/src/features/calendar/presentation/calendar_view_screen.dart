@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
+import 'package:flutter_app/src/models/user_model.dart';
+import 'package:flutter_app/src/services/user_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
 import '../../dashboard/presentation/coach/coach_session_detail.dart';
@@ -168,13 +170,9 @@ class CalendarViewScreen extends StatefulWidget {
             if (index == 0) {
               context.go('/dashboard');
             } else if (index == 1) {
-              context.go('/calendar', extra: {'userId': widget.userId, 'userRole': widget.userRole, 'academyId':widget.academyId});
+              context.go('/calendar', extra: {'userId': widget.userId, 'userRole': widget.userRole, 'academyId': widget.academyId});
             } else if (index == 2) {
-              context.go('/coach_profile', extra: {
-                'coachId': widget.userId,
-                'userRole': widget.userRole,
-                'academyId': widget.academyId,
-              });
+              context.go('/profile', extra: {'userId': widget.userId});
             }
           });
         },

@@ -195,11 +195,9 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
             );
           } else if (index == 2) {
             context.go(
-              '/student_profile',
+              '/profile',
               extra: {
-                'coachId': widget.user.id,
-                'userRole': widget.user.role,
-                'academyId': widget.user.academy,
+                'userId': widget.user.id,
               },
             );
           }

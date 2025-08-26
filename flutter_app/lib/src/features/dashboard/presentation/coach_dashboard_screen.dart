@@ -234,11 +234,14 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
             if (index == 0) {
               context.go('/dashboard');
             } else if (index == 1) {
-              context.go('/calendar', extra: {'userId': widget.user.id, 'userRole': widget.user.role, 'academyId': widget.user.academy});
-            } else if (index == 2) {
-              context.go('/coach_profile', extra: {
-                'coachId': widget.user.id,
+              context.go('/calendar', extra: {
+                'userId': widget.user.id,
+                'userRole': widget.user.role,
                 'academyId': widget.user.academy,
+              });
+            } else if (index == 2) {
+              context.go('/profile', extra: {
+                'userId': widget.user.id,
               });
             }
           });
