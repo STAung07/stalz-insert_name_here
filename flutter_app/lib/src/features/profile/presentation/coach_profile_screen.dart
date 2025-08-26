@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/src/models/user_model.dart';
 import 'package:flutter_app/src/services/academy_service.dart';
 import 'package:go_router/go_router.dart';
 
 class CoachProfileScreen extends StatefulWidget {
-  final String coachId;
-  final String academyId;
+  // final String coachId;
+  // final String academyId;
+  final UserModel user;
 
-  const CoachProfileScreen({super.key, required this.coachId, required this.academyId});
+  const CoachProfileScreen({super.key, required this.user});
 
   @override
   State<CoachProfileScreen> createState() => _CoachProfileScreenState();
@@ -30,16 +32,16 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     // Fetch academy name
     final academyList = await academyService.fetchAcademies();
     final academy = academyList.firstWhere(
-      (a) => a['id'] == widget.academyId,
+      (a) => a['id'] == widget.user.academy,
       orElse: () => {'name': 'Academy not found'},
     );
     academyName = academy['name'] ?? 'Academy not found';
 
     // Fetch subgroups
-    subgroups = await academyService.fetchSubgroupsFromAcademy(widget.academyId);
+    subgroups = await academyService.fetchSubgroupsFromAcademy(widget.user.academy);
 
     // Fetch unassigned students
-    unassignedStudents = await academyService.fetchUnassignedStudents(widget.academyId);
+    unassignedStudents = await academyService.fetchUnassignedStudents(widget.user.academy);
 
     setState(() => loading = false);
   }
@@ -97,7 +99,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                 onPressed: () async {
                   final name = nameController.text.trim();
                   if (name.isNotEmpty) {
-                    final subgroupId = await academyService.createSubgroup(widget.academyId, name);
+                    final subgroupId = await academyService.createSubgroup(widget.user.academy, name);
                     await academyService.addStudentsToSubgroup(subgroupId, selectedStudentIds);
                     Navigator.pop(context);
                     await _fetchAll();
@@ -114,7 +116,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
 
   Future<void> _showEditSubgroupDialog(String subgroupId, String subgroupName) async {
     // Fetch all students in academy and all students in this subgroup
-    final allStudents = await academyService.fetchStudentsInAcademy(widget.academyId);
+    final allStudents = await academyService.fetchStudentsInAcademy(widget.user.academy);
     final subgroupStudents = await academyService.fetchStudentsInSubgroup(subgroupId);
     final subgroupStudentIds = subgroupStudents.map((s) => s['student_id']).toSet();
 
@@ -401,12 +403,9 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
             if (index == 0) {
               context.go('/dashboard');
             } else if (index == 1) {
-              context.go('/calendar', extra: {'userId': widget.coachId, 'userRole': 'coach', 'academyId': widget.academyId});
-            } else if (index == 2) {
-              context.go('/coach_profile', extra: {
-                'coachId': widget.coachId,
-                'academyId': widget.academyId,
-              });
+              context.go('/calendar', extra: {'userId': widget.user.id, 'userRole': widget.user.role, 'academyId': widget.user.academy});
+            } else {
+              context.go('/profile', extra: {'userId': widget.user.id});
             }
           });
         },

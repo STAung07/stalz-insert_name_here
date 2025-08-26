@@ -6,7 +6,7 @@ import 'features/auth/presentation/registration_screen.dart';
 import 'features/auth/presentation/verify_email_screen.dart'; // Verify email screen
 import 'features/dashboard/presentation/dashboard_screen.dart';
 import 'features/calendar/presentation/calendar_view_screen.dart';
-import 'features/profile/presentation/coach_profile_screen.dart'; // Import coach profile screen
+import 'features/profile/presentation/profile_screen.dart';
 import 'features/auth/domain/app_user.dart';  // Add this import
 
 class MyApp extends StatelessWidget {
@@ -43,18 +43,38 @@ class MyApp extends StatelessWidget {
           },
         ),
         GoRoute(
-          path: '/coach_profile',
-          builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?; // or your own type
-            final coachId = extra?['coachId'] as String?;
-            final academyId = extra?['academyId'] as String?;
-            // Check if coachId and academyId are provided
-            if (coachId == null || academyId == null) {
-              return const Scaffold(body: Center(child: Text('Missing coach or academy ID')));
-            }
-            return CoachProfileScreen(coachId: coachId, academyId: academyId);
-          },
+          path: '/profile', 
+          builder: (_, __) {
+            final currentUser = Supabase.instance.client.auth.currentUser;
+            if (currentUser == null) return const LoginScreen();
+            return ProfileScreen(userId: AppUser.fromSupabase(currentUser).id);
+          }
         ),
+        // GoRoute(
+        //   path: '/coach_profile',
+        //   builder: (context, state) {
+        //     final extra = state.extra as Map<String, dynamic>?; // or your own type
+        //     final coachId = extra?['coachId'] as String?;
+        //     final academyId = extra?['academyId'] as String?;
+        //     // Check if coachId and academyId are provided
+        //     if (coachId == null || academyId == null) {
+        //       return const Scaffold(body: Center(child: Text('Missing coach or academy ID')));
+        //     }
+        //     return CoachProfileScreen(coachId: coachId, academyId: academyId);
+        //   },
+        // ),
+        // GoRoute(
+        //   path: '/student_profile',
+        //   builder: (context, state) {
+        //     final extra = state.extra as Map<String, dynamic>?; // or your own type
+        //     final studentId = extra?['studentId'] as String?;
+        //     // Check if studentId is provided
+        //     if (studentId == null) {
+        //       return const Scaffold(body: Center(child: Text('Missing student ID')));
+        //     }
+        //     return StudentProfileScreen(studentId: studentId);
+        //   },
+        // ),
       ],
       // redirect: (context, state) {
       //   final session = Supabase.instance.client.auth.currentSession;
