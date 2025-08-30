@@ -55,7 +55,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-            title: const Text('Create Subgroup'),
+            title: const Text('Create Subgroup', style: TextStyle(fontWeight: FontWeight.bold)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -304,17 +304,17 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: Colors.white, // Changed to #CBD2FF
         borderRadius: BorderRadius.circular(12),
         boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4)],
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Unassigned', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
+            const Text('Unassigned', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (unassignedStudents.isEmpty)
               const Padding(
@@ -363,7 +363,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                     const SizedBox(height: 32),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Color(0xFFCBD2FF),
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _showCreateSubgroupDialog,
