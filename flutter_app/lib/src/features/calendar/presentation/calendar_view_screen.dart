@@ -9,6 +9,7 @@ import '../../dashboard/presentation/student/student_session_detail.dart';
 import '../../../models/training_session_model.dart';
 import '../../../services/training_session_service.dart';
 
+enum CalendarViewType { month, week, day }
 
 class CalendarViewScreen extends StatefulWidget {
   final String userId;
@@ -53,6 +54,8 @@ class CalendarViewScreen extends StatefulWidget {
   final EventController _eventController = EventController();
   late Future<List<TrainingSessionModel>> _futureSessions;
 
+  CalendarViewType _currentViewType = CalendarViewType.month;
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +81,147 @@ class CalendarViewScreen extends StatefulWidget {
     return sessions;
   }
 
+  void _handleEventTap(CalendarEventData event, DateTime date) {
+    // Find the TrainingSessionModel corresponding to the tapped event
+    final CalendarEventData<Object?>? foundEvent = _eventController.events.firstWhere(
+      (e) => e.date == event.date && e.title == event.title && e.description == event.description,
+      orElse: () => CalendarEventData(title: '', date: DateTime.now(), event: null),
+    );
+    final TrainingSessionModel? session = foundEvent?.event as TrainingSessionModel?;
+
+    if (session != null) {
+      if (widget.userRole == 'coach') {
+        showDialog(
+            context: context,
+            builder: (context) => CoachSessionDetail(
+              session: session,
+              coachId: widget.userId,
+              onRefresh: () {
+                // Refresh the calendar after editing/deleting a session
+                setState(() {
+                  _futureSessions = _fetchAndPopulateSessions();
+                });
+              },
+            ),
+          );
+      } else if (widget.userRole == 'student') {
+        showDialog(
+          context: context,
+          builder: (context) => StudentSessionDetail(
+            session: session,
+            studentId: widget.userId,
+            onRefresh: () {
+              // Refresh the calendar after editing/deleting a session
+              setState(() {
+                _futureSessions = _fetchAndPopulateSessions();
+              });
+            },
+          ),
+        );
+      } else {
+        // Fallback to generic dialog if userRole is neither coach nor student
+        _showGenericEventDialog(context, event);
+      }
+    } else {
+      // Fallback to generic dialog if session not found
+      _showGenericEventDialog(context, event);
+    }
+  }
+
+  Widget _buildViewSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xFFCBD2FF).withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: CalendarViewType.values.map((viewType) {
+              final isSelected = _currentViewType == viewType;
+              final label = {
+                CalendarViewType.month: 'Month',
+                CalendarViewType.week: 'Week',
+                CalendarViewType.day: 'Day',
+              }[viewType]!;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _currentViewType = viewType;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFCBD2FF) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.black : Colors.black54,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalendarView() {
+    switch (_currentViewType) {
+      case CalendarViewType.month:
+        return MonthView(
+          // showLiveTimeLineInAllDays: false,
+          controller: _eventController,
+          onEventTap: (event, date) => _handleEventTap(event, date),
+          onCellTap: (events, date) {
+            // You can pre-fill this date in the modal if needed
+            print("Tapped on cell: $date");
+            setState(() {
+              _currentViewType = CalendarViewType.day;
+            });
+          },
+        );
+      case CalendarViewType.week:
+        return WeekView(
+          controller: _eventController,
+          onEventTap: (events, date) => _handleEventTap(events[0], date),
+          onDateLongPress: (date) {
+            print(date);
+            setState(() {
+              _currentViewType = CalendarViewType.day;
+            });
+          },
+          //weekPageHeaderBuilder: WeekHeader.hidden,
+        );
+      case CalendarViewType.day:
+        return DayView(
+          controller: _eventController,
+          onEventTap: (events, date) => _handleEventTap(events[0], date),
+          onDateLongPress: (date) {
+            print(date);
+          },
+        );
+      default:
+        return Container();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,59 +234,11 @@ class CalendarViewScreen extends StatefulWidget {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
-            return MonthView(
-              // showLiveTimeLineInAllDays: false,
-              controller: _eventController,
-               onEventTap: (event, date) {
-                 // Find the TrainingSessionModel corresponding to the tapped event
-                 final CalendarEventData<Object?>? foundEvent = _eventController.events.firstWhere(
-                   (e) => e.date == event.date && e.title == event.title && e.description == event.description,
-                   orElse: () => CalendarEventData(title: '', date: DateTime.now(), event: null),
-                 );
-                 final TrainingSessionModel? session = foundEvent?.event as TrainingSessionModel?;
-
-                 if (session != null) {
-                   if (widget.userRole == 'coach') {
-                     showDialog(
-                       context: context,
-                       builder: (context) => CoachSessionDetail(
-                         session: session,
-                         coachId: widget.userId,
-                         onRefresh: () {
-                           // Refresh the calendar after editing/deleting a session
-                           setState(() {
-                             _futureSessions = _fetchAndPopulateSessions();
-                           });
-                         },
-                       ),
-                     );
-                   } else if (widget.userRole == 'student') {
-                     showDialog(
-                       context: context,
-                       builder: (context) => StudentSessionDetail(
-                         session: session,
-                         studentId: widget.userId,
-                         onRefresh: () {
-                           // Refresh the calendar after editing/deleting a session
-                           setState(() {
-                             _futureSessions = _fetchAndPopulateSessions();
-                           });
-                         },
-                       ),
-                     );
-                   } else {
-                     // Fallback to generic dialog if userRole is neither coach nor student
-                     _showGenericEventDialog(context, event);
-                   }
-                 } else {
-                   // Fallback to generic dialog if session not found
-                   _showGenericEventDialog(context, event);
-                 }
-               },
-              onCellTap: (events, date) {
-                // You can pre-fill this date in the modal if needed
-                print("Tapped on cell: $date");
-              },
+            return Column(
+              children: [
+                _buildViewSelector(),
+                Expanded(child: _buildCalendarView()),
+              ],
             );
           }
         },
