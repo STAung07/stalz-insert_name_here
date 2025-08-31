@@ -21,10 +21,17 @@ class SessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: () {
+    double opacity = 1.0;
+    if (session.bookingStatus == 'Tentative') {
+      opacity = 0.5; // Adjust as needed for desired transparency
+    }
+
+    return Opacity(
+      opacity: opacity,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 8.0),
+        child: InkWell(
+          onTap: () {
           if (userRole == 'coach') {
             showDialog(
               context: context,
@@ -33,7 +40,7 @@ class SessionCard extends StatelessWidget {
                 coachId: userId,
                 onRefresh: onRefresh,
               ),
-            );
+            ); // Correct closing for showDialog
           } else {
             showDialog(
               context: context,
@@ -42,7 +49,7 @@ class SessionCard extends StatelessWidget {
                 studentId: userId,
                 onRefresh: onRefresh,
               ),
-            );
+            ); // Correct closing for showDialog
           }
         },
         child: ListTile(
@@ -51,7 +58,8 @@ class SessionCard extends StatelessWidget {
           subtitle: Text('${DateFormat.jm().format(session.startTime)} - ${DateFormat.jm().format(session.endTime) }'),
           trailing: Text('${session.startTime.day} ${DateFormat("MMMM").format(session.startTime)}'),
         ),
-      ),
-      );
+      ), // Closes InkWell
+    ), // Closes Card
+  ); // Closes Opacity
   }
 }

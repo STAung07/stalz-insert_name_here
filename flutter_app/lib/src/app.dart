@@ -69,12 +69,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFC9CD99),
+          seedColor: const Color(0xFFCBD2FF),
+          background: Colors.white,
+          onBackground: Colors.black,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFC9CD99), // Use your seed color or colorScheme.primary
-            foregroundColor: Colors.black, // Text color
+            backgroundColor: const Color(0xFFCBD2FF),
+            foregroundColor: Colors.black,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -83,13 +85,13 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFC9CD99), // Use your seed color or colorScheme.primary
+            foregroundColor: const Color(0xFFCBD2FF),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFC9CD99),
-            side: const BorderSide(color: Color(0xFFC9CD99)),
+            foregroundColor: const Color(0xFFCBD2FF),
+            side: const BorderSide(color: Color(0xFFbcbfc0)),
           ),
         ),
       ),
