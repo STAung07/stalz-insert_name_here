@@ -86,13 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.maxFinite,
-              child: ElevatedButton(
-                onPressed: () => {}, // Implement forgot password functionality
-                child: const Text('Forgot Password?'),
-              ),
-            ),
+            // SizedBox(
+            //   width: double.maxFinite,
+            //   child: ElevatedButton(
+            //     onPressed: () => {}, // Implement forgot password functionality
+            //     child: const Text('Forgot Password?'),
+            //   ),
+            // ),
           ],
         ),
       ),
