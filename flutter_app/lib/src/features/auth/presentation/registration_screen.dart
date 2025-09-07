@@ -19,24 +19,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final passwordController = TextEditingController();
   final fullNameController = TextEditingController();
   String? selectedRole; // Holds the selected role
-  String? selectedAcademyId;
+  String? accessCode; // Holds the inputted access code
   bool loading = false;
   bool hidePassword = true;
-  List<Map<String, dynamic>> academies = []; // List of academies, if needed
   
   @override
   void initState() {
-    super.initState();
-    // Optionally, fetch academies if needed
-    _fetchAcademies();
+  super.initState();
+  // No need to fetch academies for access code joining
   }
 
   Future<void> _fetchAcademies() async {
-    final result = await academyService.fetchAcademies();
-    print('Fetched academies: $result');
-    setState(() {
-      academies = result;
-    });
+  // No longer needed
   }
 
   // TODO: Move out to shared utils
@@ -55,45 +49,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    // Must select an academy
-    if (selectedAcademyId == null || selectedAcademyId!.isEmpty) {
+    // Must enter an access code
+    if (accessCode == null || accessCode!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an academy')),
+        const SnackBar(content: Text('Please enter an academy access code')),
       );
       return;
     }
 
     setState(() => loading = true);
     try {
+      // Validate access code and get academyId
+      final result = await academyService.supabase
+        .from('academies')
+        .select('id')
+        .eq('access_code', accessCode)
+        .maybeSingle();
+      final academyId = result?['id'] as String?;
+      if (academyId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid academy access code')),
+        );
+        setState(() => loading = false);
+        return;
+      }
+
       UserRole role = selectedRole == 'coach' ? UserRole.coach : UserRole.student;
       final registeredUser = await auth.register(
         email: emailController.text,
         password: passwordController.text,
         fullName: fullNameController.text,
-        role: role, // Pass the selected role
+        role: role,
       );
-      
-      // // Check if userId is null, which means registration failed
-      // if (registeredUser == null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Registration failed. Please try again.')),
-      //   );
-      //   return;
-      // }
 
-      if (selectedAcademyId != null && selectedAcademyId!.isNotEmpty) {
-        final userId = registeredUser.id;
-        if (selectedRole == 'coach') {
-          await academyService.addCoachToAcademy(selectedAcademyId!, userId!);
-        } else if (selectedRole == 'student') {
-          await academyService.addStudentToAcademy(selectedAcademyId!, userId!);
-        }
+      final userId = registeredUser.id;
+      if (selectedRole == 'coach') {
+        await academyService.addCoachToAcademy(academyId, userId!);
+      } else if (selectedRole == 'student') {
+        await academyService.addStudentToAcademy(academyId, userId!);
       }
-      // Registration successful, need to verfiy email; redirect to verify email screen
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Registration successful! Please verify your email address provided.')),
-      // );
-      // context.go('/verify_email', extra: registeredUser.email); // Redirect to verify email screen
       context.go('/dashboard');
     } catch (e) {
       print(e);
@@ -128,15 +122,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               decoration: const InputDecoration(labelText: 'Select Role'),
             ),
             const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
-              value: selectedAcademyId,
-              items: academies.map((academy) => DropdownMenuItem(
-                value: academy['id'] as String,
-                child: Text(academy['name'] as String),
-              )).toList(),
-              onChanged: (value) => setState(() => selectedAcademyId = value),
-              decoration: const InputDecoration(labelText: 'Select Academy'),
-              validator: (value) => value == null || value.isEmpty ? 'Please select an academy' : null,
+            TextField(
+              decoration: const InputDecoration(labelText: 'Academy Access Code'),
+              onChanged: (value) => setState(() => accessCode = value.trim()),
             ),
             const SizedBox(height: 20),
             SizedBox(
