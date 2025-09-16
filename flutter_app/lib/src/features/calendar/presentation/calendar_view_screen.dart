@@ -53,6 +53,7 @@ class CalendarViewScreen extends StatefulWidget {
    }
   final EventController _eventController = EventController();
   late Future<List<TrainingSessionModel>> _futureSessions;
+  late DateTime? _selectedDate;
 
   CalendarViewType _currentViewType = CalendarViewType.month;
 
@@ -193,6 +194,7 @@ class CalendarViewScreen extends StatefulWidget {
             // You can pre-fill this date in the modal if needed
             print("Tapped on cell: $date");
             setState(() {
+              _selectedDate = date;
               _currentViewType = CalendarViewType.day;
             });
           },
@@ -204,6 +206,7 @@ class CalendarViewScreen extends StatefulWidget {
           onDateLongPress: (date) {
             print(date);
             setState(() {
+              _selectedDate = date;
               _currentViewType = CalendarViewType.day;
             });
           },
@@ -212,6 +215,7 @@ class CalendarViewScreen extends StatefulWidget {
       case CalendarViewType.day:
         return DayView(
           controller: _eventController,
+          initialDay: _selectedDate,
           onEventTap: (events, date) => _handleEventTap(events[0], date),
           onDateLongPress: (date) {
             print(date);
