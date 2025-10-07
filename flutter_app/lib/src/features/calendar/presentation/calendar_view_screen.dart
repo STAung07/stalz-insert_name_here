@@ -61,6 +61,7 @@ class CalendarViewScreen extends StatefulWidget {
   void initState() {
     super.initState();
     _futureSessions = _fetchAndPopulateSessions();
+    _selectedDate = DateTime.now();
     print('CalendarViewScreen userId: ${widget.userId}');
     print('CalendarViewScreen userRole: ${widget.userRole}');
     print('CalendarViewScreen academyId: ${widget.academyId}');
