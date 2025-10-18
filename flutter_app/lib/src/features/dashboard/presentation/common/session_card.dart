@@ -53,7 +53,30 @@ class SessionCard extends StatelessWidget {
           }
         },
         child: ListTile(
-          leading: const Icon(Icons.sports),
+          leading: Builder(
+            builder: (context) {
+              IconData iconData;
+              Color iconColor;
+              switch (session.bookingStatus) {
+                case 'Cancelled':
+                  iconData = Icons.close;
+                  iconColor = Colors.red;
+                  break;
+                case 'Tentative':
+                  iconData = Icons.remove;
+                  iconColor = Colors.grey;
+                  break;
+                case 'Booked':
+                  iconData = Icons.check;
+                  iconColor = Colors.green;
+                  break;
+                default:
+                  iconData = Icons.sports;
+                  iconColor = Theme.of(context).iconTheme.color ?? Colors.black; // Default color
+              }
+              return Icon(iconData, color: iconColor);
+            },
+          ),
           title: Text(session.title),
           subtitle: Text('${DateFormat.jm().format(session.startTime)} - ${DateFormat.jm().format(session.endTime) }'),
           trailing: Text('${session.startTime.day} ${DateFormat("MMMM").format(session.startTime)}'),
