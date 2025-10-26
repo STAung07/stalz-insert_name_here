@@ -29,9 +29,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   // No need to fetch academies for access code joining
   }
 
-  Future<void> _fetchAcademies() async {
-  // No longer needed
-  }
+  // _fetchAcademies removed (no longer needed)
 
   // TODO: Move out to shared utils
   void _togglePasswordVisibility() {
@@ -88,7 +86,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       } else if (selectedRole == 'student') {
         await academyService.addStudentToAcademy(academyId, userId!);
       }
-      context.go('/dashboard');
+
+      // After registration, go to verify email screen
+      context.go('/verify_email', extra: emailController.text);
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error here: $e')));

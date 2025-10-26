@@ -26,21 +26,9 @@ class AuthService {
       throw Exception('User not found');
     }
 
-    final userId = user.id;
-    final userRole = user.userMetadata?['role'] as String?;
-    final userFullName = user.userMetadata?['full_name'] as String?;
-
-
-    final insertResponse = await supabase.
-      from('users').
-      select('id')
-      .eq('id', userId)
-      .single();
-    print("Insert Response:");
-
-    print(insertResponse);
-
-    return userRole;
+  // userId removed (unused)
+  final userRole = user.userMetadata?['role'] as String?;
+  return userRole;
   }
 
   // Need to create user table in Supabase with corresponding columns
@@ -79,18 +67,19 @@ class AuthService {
 
 
   Future<bool> isEmailVerified() async {
+    // Refresh the session to get the latest user info
+    await supabase.auth.refreshSession();
     final user = supabase.auth.currentUser;
     if (user == null) return false;
-
-    // Refresh the user to get the latest email verification status
-    await supabase.auth.refreshSession();
-    return user.emailConfirmedAt != null; // Check if email is verified
+    return user.emailConfirmedAt != null;
   }
+
+  String? get currentEmail => supabase.auth.currentUser?.email;
 
   Future<void> resend(String email) async {
     await supabase.auth.resend(
       email: email,
-      type: OtpType.email,
+      type: OtpType.signup, // Use signup for email verification
     );
   }
 

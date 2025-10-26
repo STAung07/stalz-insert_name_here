@@ -24,15 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     setState(() => loading = true);
     try {
-      final role = await auth.signIn(emailController.text, passwordController.text);
+      await auth.signIn(emailController.text, passwordController.text);
+      final isVerified = await auth.isEmailVerified();
+      if (!isVerified) {
+        // If not verified, go to verify email screen
+        context.go('/verify_email', extra: emailController.text);
+        return;
+      }
       context.go('/dashboard');
-      // if (role == 'coach') {
-      //   context.go('/dashboard');
-      // } else if (role == 'student') {
-      //   context.go('/student_dashboard');
-      // } else {
-      //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid role')));
-      // }
     } catch (e) {
       // TODO: Handle specific exceptions for better user feedback
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
