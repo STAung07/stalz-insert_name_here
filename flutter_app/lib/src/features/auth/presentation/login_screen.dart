@@ -16,25 +16,75 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool loading = false;
   bool hidePassword = true;
+
   void _togglePasswordVisibility() {
     setState(() {
       hidePassword = !hidePassword;
     });
   }
+
   void _login() async {
     setState(() => loading = true);
     try {
       await auth.signIn(emailController.text, passwordController.text);
-      final isVerified = await auth.isEmailVerified();
-      if (!isVerified) {
-        // If not verified, go to verify email screen
-        context.go('/verify_email', extra: emailController.text);
-        return;
-      }
       context.go('/dashboard');
     } catch (e) {
-      // TODO: Handle specific exceptions for better user feedback
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      final errorMsg = e.toString();
+      print('Exception during login: $errorMsg');
+      if (errorMsg.contains('Email not confirmed')) {
+        final parentContext = context;
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Email Not Verified'),
+            content: const Text('Your email address has not been verified. Please check your inbox for a verification link or resend the verification email.'),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  setState(() => loading = true);
+                  try {
+                    await auth.resend(emailController.text);
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Verification email resent. Please check your inbox.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (err) {
+                    ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('Failed to resend verification email: $err')));
+                  } finally {
+                    setState(() => loading = false);
+                  }
+                },
+                child: const Text(
+                  'Resend Verification Email',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (errorMsg.contains('Invalid login credentials')) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email or password. Please try again.')));
+      } else if (errorMsg.contains('User not found')) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No user found with this email.')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg)));
+      }
     } finally {
       setState(() => loading = false);
     }
@@ -43,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to XXX!',
+      appBar: AppBar(title: const Text('Welcome to Rallin!',
         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
       ),

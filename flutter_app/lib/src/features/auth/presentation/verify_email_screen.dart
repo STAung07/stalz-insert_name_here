@@ -78,7 +78,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 _statusMessage,
                 style: TextStyle(color: _statusMessage.contains('Failed') ? Colors.red : Colors.green),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.maxFinite,
               child: ElevatedButton(

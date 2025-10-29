@@ -27,8 +27,8 @@ class AuthService {
     }
 
   // userId removed (unused)
-  final userRole = user.userMetadata?['role'] as String?;
-  return userRole;
+    final userRole = user.userMetadata?['role'] as String?;
+    return userRole;
   }
 
   // Need to create user table in Supabase with corresponding columns
