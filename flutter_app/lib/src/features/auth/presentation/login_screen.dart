@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../services/auth_service.dart'; // Assuming you have an AuthService for handling authentication
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,7 +11,18 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+
 class _LoginScreenState extends State<LoginScreen> {
+  bool rememberMe = false;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedCredentials();
+  }
+
+
   final auth = AuthService();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -27,6 +39,16 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => loading = true);
     try {
       await auth.signIn(emailController.text, passwordController.text);
+      // Save credentials if rememberMe is checked
+      if (rememberMe) {
+        await storage.write(key: 'email', value: emailController.text);
+        await storage.write(key: 'password', value: passwordController.text);
+        await storage.write(key: 'rememberMe', value: 'true');
+      } else {
+        await storage.delete(key: 'email');
+        await storage.delete(key: 'password');
+        await storage.delete(key: 'rememberMe');
+      }
       context.go('/dashboard');
     } catch (e) {
       final errorMsg = e.toString();
@@ -90,6 +112,19 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _loadRememberedCredentials() async {
+    final remembered = await storage.read(key: 'rememberMe');
+    if (remembered == 'true') {
+      final email = await storage.read(key: 'email');
+      final password = await storage.read(key: 'password');
+      setState(() {
+        rememberMe = true;
+        emailController.text = email ?? '';
+        passwordController.text = password ?? '';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,6 +152,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ), 
               obscureText: hidePassword
+            ),
+            CheckboxListTile(
+              title: const Text('Remember Me'),
+              value: rememberMe,
+              onChanged: (value) {
+                setState(() {
+                  rememberMe = value ?? false;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,
             ),
             const SizedBox(height: 20),
             SizedBox(

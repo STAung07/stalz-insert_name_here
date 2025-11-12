@@ -40,6 +40,7 @@ dependencies:
   go_router: ^12.1.0
   flutter_riverpod: ^2.4.5
   calendar_view: ^1.4.0
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:
