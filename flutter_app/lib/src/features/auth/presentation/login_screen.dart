@@ -44,10 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
         await storage.write(key: 'email', value: emailController.text);
         await storage.write(key: 'password', value: passwordController.text);
         await storage.write(key: 'rememberMe', value: 'true');
+        await storage.write(key: 'autoLogin', value: 'true');
       } else {
         await storage.delete(key: 'email');
         await storage.delete(key: 'password');
         await storage.delete(key: 'rememberMe');
+        await storage.delete(key: 'autoLogin');
       }
       context.go('/dashboard');
     } catch (e) {
@@ -114,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loadRememberedCredentials() async {
     final remembered = await storage.read(key: 'rememberMe');
+    final autoLogin = await storage.read(key: 'autoLogin');
     if (remembered == 'true') {
       final email = await storage.read(key: 'email');
       final password = await storage.read(key: 'password');
@@ -122,6 +125,15 @@ class _LoginScreenState extends State<LoginScreen> {
         emailController.text = email ?? '';
         passwordController.text = password ?? '';
       });
+      // If autoLogin is true, trigger login automatically
+      if (autoLogin == 'true' && (email?.isNotEmpty ?? false) && (password?.isNotEmpty ?? false)) {
+        // Wait for the widget to build before calling login
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !loading) {
+            _login();
+          }
+        });
+      }
     }
   }
 
