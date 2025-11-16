@@ -12,6 +12,7 @@ class AddSessionForm extends StatefulWidget {
   final String? academyId;
   final VoidCallback? onSessionCreated;
   final TrainingSessionModel? initialSession;
+  final Function(TrainingSessionModel, String, List<String>) onSave;
 
   const AddSessionForm({
     super.key,
@@ -19,21 +20,22 @@ class AddSessionForm extends StatefulWidget {
     this.academyId,
     this.onSessionCreated,
     this.initialSession,
-    this.sessionId
+    this.sessionId,
+    required this.onSave,
   });
 
   @override
-  State<AddSessionForm> createState() => _AddSessionFormState();
+  AddSessionFormState createState() => AddSessionFormState();
 }
 
-class _AddSessionFormState extends State<AddSessionForm> {
-  final _formKey = GlobalKey<FormState>();
+class AddSessionFormState extends State<AddSessionForm> {
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   final _trainingPlanController = TextEditingController();
   final _feedbackController = TextEditingController();
   final List<Map<String, String>> _selectedStudents = [];
   final Map<String, String> _studentNames = {}; // Map student IDs to names
+  final _formKey = GlobalKey<FormState>();
 
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
@@ -44,49 +46,200 @@ class _AddSessionFormState extends State<AddSessionForm> {
   String _sessionType = 'Private';
 
   Future<void> _selectDateTime(BuildContext context, bool isStart) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
-    );
-    if (date == null) return;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (time == null) return;
-
-    final selectedDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-
     if (isStart) {
+      final date = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime.now().add(Duration(days: 365)),
+        builder: (ctx, child) => Theme(
+          data: Theme.of(ctx).copyWith(
+            datePickerTheme: DatePickerThemeData(
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.lightGreen,
+              ),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+            ),
+          ),
+          child: child!,
+        ),
+      );
+      if (date == null) return;
+
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (ctx, child) => Theme(
+          data: Theme.of(ctx).copyWith(
+            timePickerTheme: TimePickerThemeData(
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.lightGreen,
+              ),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              dayPeriodTextColor: Colors.black,
+              dayPeriodColor: MaterialStateColor.resolveWith(
+                (states) => states.contains(MaterialState.selected)
+                    ? Color(0xFF768DFF).withOpacity(0.4)
+                    : Color(0xFF768DFF).withOpacity(0.00),
+              ),
+              hourMinuteTextColor: Colors.black,
+              hourMinuteColor: MaterialStateColor.resolveWith(
+                (states) => states.contains(MaterialState.selected)
+                    ? Color(0xFF768DFF).withOpacity(0.45)
+                    : Color(0xFF768DFF).withOpacity(0.05),
+              ),
+            ),
+          ),
+          child: child!,
+        ),
+      );
+      if (time == null) return;
+
+      final startDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+
       setState(() {
         _selectedStartDate = date;
         _startTime = time;
+
+        // Enforce same-day session
+        _selectedEndDate = date;
+
+        // Ensure end time is at least 30 minutes after start
+        if (_endTime == null) {
+          final defaultEnd = startDateTime.add(const Duration(minutes: 30));
+          _endTime = TimeOfDay(hour: defaultEnd.hour, minute: defaultEnd.minute);
+        } else {
+          final currentEndDateTime = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            _endTime!.hour,
+            _endTime!.minute,
+          );
+          final minEnd = startDateTime.add(const Duration(minutes: 30));
+          if (currentEndDateTime.isBefore(minEnd)) {
+            _endTime = TimeOfDay(hour: minEnd.hour, minute: minEnd.minute);
+          }
+        }
       });
     } else {
-      // Validate that end time is after start time
-      if (_selectedStartDate != null && _startTime != null) {
-        final startDateTime = DateTime(
-          _selectedStartDate!.year,
-          _selectedStartDate!.month,
-          _selectedStartDate!.day,
-          _startTime!.hour,
-          _startTime!.minute,
+      if (_selectedStartDate == null || _startTime == null) {
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Missing start time'),
+            content: const Text('Please select the start date and time first.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.black.withOpacity(0.25),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
         );
-        if (selectedDateTime.isBefore(startDateTime)) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('End date and time must be after start date and time.'),
-            ),
-          );
-          return; // Do not update state if validation fails
-        }
+        return;
       }
+
+      // Compute default initial end time as start + 30 minutes (or keep previously chosen end time)
+      final startDateTimeForEnd = DateTime(
+        _selectedStartDate!.year,
+        _selectedStartDate!.month,
+        _selectedStartDate!.day,
+        _startTime!.hour,
+        _startTime!.minute,
+      );
+      final minEndForInitial = startDateTimeForEnd.add(const Duration(minutes: 30));
+      final initialEndTime = _endTime ?? TimeOfDay(
+        hour: minEndForInitial.hour,
+        minute: minEndForInitial.minute,
+      );
+      final time = await showTimePicker(
+        context: context,
+        initialTime: initialEndTime,
+        builder: (ctx, child) => Theme(
+          data: Theme.of(ctx).copyWith(
+            timePickerTheme: TimePickerThemeData(
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.lightGreen,
+              ),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              dayPeriodTextColor: Colors.black,
+              dayPeriodColor: MaterialStateColor.resolveWith(
+                (states) => states.contains(MaterialState.selected)
+                    ? Color(0xFF768DFF).withOpacity(0.4)
+                    : Color(0xFF768DFF).withOpacity(0.00),
+              ),
+              hourMinuteTextColor: Colors.black,
+              hourMinuteColor: MaterialStateColor.resolveWith(
+                (states) => states.contains(MaterialState.selected)
+                    ? Color(0xFF768DFF).withOpacity(0.45)
+                    : Color(0xFF768DFF).withOpacity(0.05),
+              ),
+            ),
+          ),
+          child: child!,
+        ),
+      );
+      if (time == null) return;
+
+      final startDateTime = DateTime(
+        _selectedStartDate!.year,
+        _selectedStartDate!.month,
+        _selectedStartDate!.day,
+        _startTime!.hour,
+        _startTime!.minute,
+      );
+      final endCandidate = DateTime(
+        _selectedStartDate!.year,
+        _selectedStartDate!.month,
+        _selectedStartDate!.day,
+        time.hour,
+        time.minute,
+      );
+
+      final minEnd = startDateTime.add(const Duration(minutes: 30));
+      if (endCandidate.isBefore(minEnd)) {
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Invalid end time'),
+            content: const Text('End time must be at least 30 minutes after start time.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.black.withOpacity(0.25),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       setState(() {
-        _selectedEndDate = date;
+        // Enforce end date equals start date
+        _selectedEndDate = _selectedStartDate;
         _endTime = time;
       });
     }
@@ -127,6 +280,39 @@ class _AddSessionFormState extends State<AddSessionForm> {
     }
   }
   
+  Future<void> saveSession() async {
+    if (_formKey.currentState!.validate()) {
+      final studentIds = await _getFlattenedStudentIds();
+      final newSession = TrainingSessionModel(
+        sessionId: widget.sessionId,
+        academyId: widget.academyId ?? '',
+        title: _titleController.text,
+        startTime: DateTime(
+          _selectedStartDate!.year,
+          _selectedStartDate!.month,
+          _selectedStartDate!.day,
+          _startTime!.hour,
+          _startTime!.minute,
+        ),
+        endTime: DateTime(
+          _selectedEndDate!.year,
+          _selectedEndDate!.month,
+          _selectedEndDate!.day,
+          _endTime!.hour,
+          _endTime!.minute,
+        ),
+        location: _locationController.text,
+        bookingStatus: _bookingStatus,
+        sessionType: _sessionType,
+        studentIds: studentIds,
+        trainingPlan: _trainingPlanController.text,
+        feedback: _feedbackController.text,
+        attendanceCount: 0,
+      );
+      widget.onSave(newSession, widget.coachId, studentIds);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -333,53 +519,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // Save Session Button
-            Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final studentIds = await _getFlattenedStudentIds();
-                    final newSession = TrainingSessionModel(
-                      sessionId: widget.sessionId,
-                      academyId: widget.academyId ?? '',
-                      title: _titleController.text,
-                      startTime: DateTime(
-                        _selectedStartDate!.year,
-                        _selectedStartDate!.month,
-                        _selectedStartDate!.day,
-                        _startTime!.hour,
-                        _startTime!.minute,
-                      ),
-                      endTime: DateTime(
-                        _selectedEndDate!.year,
-                        _selectedEndDate!.month,
-                        _selectedEndDate!.day,
-                        _endTime!.hour,
-                        _endTime!.minute,
-                      ),
-                      location: _locationController.text,
-                      bookingStatus: _bookingStatus,
-                      sessionType: _sessionType,
-                      studentIds: studentIds,
-                      trainingPlan: _trainingPlanController.text,
-                      feedback: _feedbackController.text,
-                      attendanceCount: 0,
-                    );
-
-                    TrainingSessionService().createTrainingSession(
-                      newSession,
-                      widget.coachId, 
-                      studentIds,
-                    );
-                    if (widget.onSessionCreated != null)
-                      widget.onSessionCreated!();
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: Text('Save Session'),
               ),
             ),
           ],

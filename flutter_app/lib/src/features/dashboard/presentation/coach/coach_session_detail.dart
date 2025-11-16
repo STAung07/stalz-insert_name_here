@@ -215,6 +215,18 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                     coachId: widget.coachId,
                                     academyId: widget.session.academyId,
                                     initialSession: widget.session,
+                                    onSave: (newSession, coachId, studentIds) async {
+                                      // Use createTrainingSession which internally uses upsertTrainingSession
+                                      await TrainingSessionService().createTrainingSession(
+                                        newSession,
+                                        coachId,
+                                        studentIds,
+                                      );
+                                      if (mounted) {
+                                        Navigator.of(context).pop();
+                                      }
+                                      widget.onRefresh?.call();
+                                    },
                                     onSessionCreated: () async {
                                       await Future.delayed(Duration(milliseconds: 500));
                                       widget.onRefresh?.call();

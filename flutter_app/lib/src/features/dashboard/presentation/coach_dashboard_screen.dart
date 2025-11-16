@@ -9,7 +9,7 @@ import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'coach/add_session_form.dart';
+import 'package:flutter_app/src/features/dashboard/presentation/coach/add_session_form.dart';
 import 'common/action_button.dart';
 import 'common/session_card.dart';
 import 'common/stats_overview.dart';
@@ -27,6 +27,7 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
   final GlobalKey<SessionListState> _sessionListKey =
       GlobalKey<SessionListState>();
   final GlobalKey<StatsOverviewState> _statsOverviewKey = GlobalKey<StatsOverviewState>();
+  final GlobalKey<AddSessionFormState> _addSessionFormKey = GlobalKey<AddSessionFormState>();
   final auth = AuthService();
   final academyService = AcademyService(); 
   bool loading = false;
@@ -102,6 +103,20 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                             height:
                                 screenSize.height * 0.7, // 70% of screen height
                             child: AddSessionForm(
+                              key: _addSessionFormKey,
+                              onSave: (newSession, coachId, studentIds) async {
+                                await TrainingSessionService().createTrainingSession(
+                                  newSession,
+                                  coachId,
+                                  studentIds,
+                                );
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                                if (_sessionListKey.currentState != null) {
+                                  _sessionListKey.currentState?.refreshSessions();
+                                }
+                              },
                               onSessionCreated: () async {
                                 await Future.delayed(
                                   Duration(milliseconds: 500),
@@ -113,9 +128,21 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                             ),
                           ),
                           actions: [
+                            ElevatedButton(
+                              // style: ElevatedButton.styleFrom(
+                              //   backgroundColor: Colors.lightGreen,
+                              // ),
+                              onPressed: () {
+                                _addSessionFormKey.currentState?.saveSession();
+                              },
+                              child: const Text('Save Session'),
+                            ),
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('Cancel'),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                           ],
                         );
