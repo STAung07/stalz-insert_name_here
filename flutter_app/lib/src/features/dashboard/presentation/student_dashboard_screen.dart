@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/services/auth_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:flutter_app/src/features/dashboard/presentation/common/session_list.dart';
 import 'package:flutter_app/src/services/training_session_service.dart';
@@ -38,6 +39,9 @@ class StudentDashboardScreenState extends State<StudentDashboardScreen> {
     setState(() {
       loading = true;
     });
+    // Set autoLogin to false in secure storage
+  final storage = FlutterSecureStorage();
+  await storage.write(key: 'autoLogin', value: 'false');
     // Simulate a delay for sign-out process
     Future.delayed(const Duration(seconds: 1), () async {
       setState(() {

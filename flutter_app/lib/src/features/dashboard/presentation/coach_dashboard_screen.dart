@@ -5,6 +5,7 @@ import 'package:flutter_app/src/services/training_session_service.dart';
 import 'package:flutter_app/src/models/training_session_model.dart';
 import 'package:flutter_app/src/services/auth_service.dart';
 import 'package:flutter_app/src/services/academy_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -53,6 +54,9 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
     setState(() {
       loading = true;
     });
+    // Set autoLogin to false in secure storage
+  final storage = FlutterSecureStorage();
+  await storage.write(key: 'autoLogin', value: 'false');
     // Simulate a delay for sign-out process
     Future.delayed(const Duration(seconds: 1), () async {
       setState(() {

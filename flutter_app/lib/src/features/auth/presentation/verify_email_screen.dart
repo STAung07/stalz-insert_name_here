@@ -16,19 +16,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   bool _isResending = false;
   String _statusMessage = '';
 
-  // TODO: Possible workarounds to handle email verification
-  // 1. Use a custom email verification flow; Backend endpoint that uses Supabase's auth API to send verification emails
-  // 2. Register them again, but need to either prompt user to re-enter email or store it in a state management solution
   Future<void> _resendEmail() async {
     setState(() {
       _isResending = true;
       _statusMessage = '';
     });
-
     try {
-      print(widget.email);
-      // Ensure email type is suitable for the resend operation
-      print(auth.currentUser?.email);
       await auth.resend(widget.email!);
       setState(() {
         _statusMessage = 'Verification email sent!';
@@ -65,7 +58,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Did not receive the email? Check your spam folder or click the button below to go back to the registration screen and re-register.',
+              'Did not receive the email? Check your spam folder or click the button below to resend the verification email.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16),
             ),
@@ -73,7 +66,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             SizedBox(
               width: double.maxFinite,
               child: ElevatedButton(
-                onPressed: _isResending ? null : () => context.go('/register'),
+                onPressed: _isResending ? null : _resendEmail,
                 child: _isResending
                     ? const CircularProgressIndicator()
                     : const Text('Resend Email'),
@@ -83,9 +76,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             if (_statusMessage.isNotEmpty)
               Text(
                 _statusMessage,
-                style: const TextStyle(color: Colors.green),
+                style: TextStyle(color: _statusMessage.contains('Failed') ? Colors.red : Colors.green),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.maxFinite,
               child: ElevatedButton(
