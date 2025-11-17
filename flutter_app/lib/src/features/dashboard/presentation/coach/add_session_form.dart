@@ -281,36 +281,79 @@ class AddSessionFormState extends State<AddSessionForm> {
   }
   
   Future<void> saveSession() async {
-    if (_formKey.currentState!.validate()) {
-      final studentIds = await _getFlattenedStudentIds();
-      final newSession = TrainingSessionModel(
-        sessionId: widget.sessionId,
-        academyId: widget.academyId ?? '',
-        title: _titleController.text,
-        startTime: DateTime(
-          _selectedStartDate!.year,
-          _selectedStartDate!.month,
-          _selectedStartDate!.day,
-          _startTime!.hour,
-          _startTime!.minute,
+    // Validate text fields (title, location) first
+    if (!_formKey.currentState!.validate()) return;
+
+    // Simple popup warnings for missing start/end date/time
+    if (_selectedStartDate == null || _startTime == null) {
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Missing start time'),
+          content: const Text('Please select a start date and time.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.25),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
         ),
-        endTime: DateTime(
-          _selectedEndDate!.year,
-          _selectedEndDate!.month,
-          _selectedEndDate!.day,
-          _endTime!.hour,
-          _endTime!.minute,
-        ),
-        location: _locationController.text,
-        bookingStatus: _bookingStatus,
-        sessionType: _sessionType,
-        studentIds: studentIds,
-        trainingPlan: _trainingPlanController.text,
-        feedback: _feedbackController.text,
-        attendanceCount: 0,
       );
-      widget.onSave(newSession, widget.coachId, studentIds);
+      return;
     }
+    if (_selectedEndDate == null || _endTime == null) {
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Missing end time'),
+          content: const Text('Please select an end date and time.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.25),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final studentIds = await _getFlattenedStudentIds();
+    final newSession = TrainingSessionModel(
+      sessionId: widget.sessionId,
+      academyId: widget.academyId ?? '',
+      title: _titleController.text,
+      startTime: DateTime(
+        _selectedStartDate!.year,
+        _selectedStartDate!.month,
+        _selectedStartDate!.day,
+        _startTime!.hour,
+        _startTime!.minute,
+      ),
+      endTime: DateTime(
+        _selectedEndDate!.year,
+        _selectedEndDate!.month,
+        _selectedEndDate!.day,
+        _endTime!.hour,
+        _endTime!.minute,
+      ),
+      location: _locationController.text,
+      bookingStatus: _bookingStatus,
+      sessionType: _sessionType,
+      studentIds: studentIds,
+      trainingPlan: _trainingPlanController.text,
+      feedback: _feedbackController.text,
+      attendanceCount: 0,
+    );
+    widget.onSave(newSession, widget.coachId, studentIds);
   }
 
   @override

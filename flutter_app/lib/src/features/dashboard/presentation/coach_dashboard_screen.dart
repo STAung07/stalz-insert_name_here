@@ -132,22 +132,35 @@ class CoachDashboardScreenState extends State<CoachDashboardScreen> {
                             ),
                           ),
                           actions: [
-                            ElevatedButton(
-                              // style: ElevatedButton.styleFrom(
-                              //   backgroundColor: Colors.lightGreen,
-                              // ),
-                              onPressed: () {
-                                _addSessionFormKey.currentState?.saveSession();
-                              },
-                              child: const Text('Save Session'),
+                            Row(
+                              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _addSessionFormKey.currentState?.saveSession();
+                                      },
+                                      child: const Text('Save'),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
+                            
                           ],
                         );
                       },
