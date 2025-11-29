@@ -25,6 +25,7 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
   final Map<String, String> _studentNames = {};
   final Map<String, String> _studentAttendanceStatus = {};
   bool _isLoading = true;
+  final GlobalKey<AddSessionFormState> _editFormKey = GlobalKey<AddSessionFormState>();
 
   @override
   void initState() {
@@ -211,6 +212,7 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                 child: SizedBox(
                                   width: double.infinity,
                                   child: AddSessionForm(
+                                    key: _editFormKey,
                                     sessionId: widget.session.sessionId,
                                     coachId: widget.coachId,
                                     academyId: widget.session.academyId,
@@ -222,9 +224,6 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                         coachId,
                                         studentIds,
                                       );
-                                      if (mounted) {
-                                        Navigator.of(context).pop();
-                                      }
                                       widget.onRefresh?.call();
                                     },
                                     onSessionCreated: () async {
@@ -235,8 +234,41 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                 ),
                               ),
                             ),
+                            actions: [
+                            Row(
+                              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _editFormKey.currentState?.saveSession();
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Save'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            
+                          ],
                           );
                         },
+                        
                       );
                     },
                     child: const Text('Edit'),

@@ -114,9 +114,9 @@ class AddSessionFormState extends State<AddSessionForm> {
         // Enforce same-day session
         _selectedEndDate = date;
 
-        // Ensure end time is at least 30 minutes after start
+        // Ensure end time is at least 1h after start
         if (_endTime == null) {
-          final defaultEnd = startDateTime.add(const Duration(minutes: 30));
+          final defaultEnd = startDateTime.add(const Duration(minutes: 60));
           _endTime = TimeOfDay(hour: defaultEnd.hour, minute: defaultEnd.minute);
         } else {
           final currentEndDateTime = DateTime(
