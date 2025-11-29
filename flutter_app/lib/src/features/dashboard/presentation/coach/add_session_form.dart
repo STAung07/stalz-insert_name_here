@@ -214,14 +214,14 @@ class AddSessionFormState extends State<AddSessionForm> {
         time.minute,
       );
 
-      final minEnd = startDateTime.add(const Duration(minutes: 60));
+      final minEnd = startDateTime.add(const Duration(minutes: 30));
       if (endCandidate.isBefore(minEnd)) {
         if (!mounted) return;
         await showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Invalid end time'),
-            content: const Text('End time must be at least 60 minutes after start time.'),
+            content: const Text('End time must be at least 30 minutes after start time.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
