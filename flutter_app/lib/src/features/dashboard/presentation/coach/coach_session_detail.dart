@@ -200,6 +200,7 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                         context: context,
                         builder: (BuildContext context) {
                           final screenSize = MediaQuery.of(context).size;
+                          final editFormKey = GlobalKey<AddSessionFormState>();
                           return AlertDialog(
                             title: Text('Edit Session'),
                             content: ConstrainedBox(
@@ -211,6 +212,7 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                 child: SizedBox(
                                   width: double.infinity,
                                   child: AddSessionForm(
+                                    key: editFormKey,
                                     sessionId: widget.session.sessionId,
                                     coachId: widget.coachId,
                                     academyId: widget.session.academyId,
@@ -222,10 +224,9 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                         coachId,
                                         studentIds,
                                       );
-                                      if (mounted) {
-                                        Navigator.of(context).pop();
-                                      }
-                                      widget.onRefresh?.call();
+                                      // Always close the edit dialog after a successful save
+                                      Navigator.of(context).pop();
+                                       widget.onRefresh?.call();
                                     },
                                     onSessionCreated: () async {
                                       await Future.delayed(Duration(milliseconds: 500));
@@ -235,6 +236,36 @@ class _CoachSessionDetailState extends State<CoachSessionDetail> {
                                 ),
                               ),
                             ),
+                            actions: [
+                              Row(
+                                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text(
+                                          'Cancel',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          editFormKey.currentState?.saveSession();
+                                        },
+                                        child: const Text('Save'),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ]
                           );
                         },
                       );
