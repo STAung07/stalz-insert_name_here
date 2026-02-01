@@ -16,7 +16,7 @@ class StudentProfileScreen extends StatefulWidget {
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
   final academyService = AcademyService();
   String academyName = '';
-  String subgroupName = '';
+  List<String> subgroupNames = [];
   bool loading = true;
 
   @override
@@ -43,17 +43,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       academyName = 'Academy not found';
     }
 
-    // 3. Get subgroup (if any)
+    // 3. Get subgroups (if any)
     final subgroupResponse = await academyService.supabase
         .from('subgroup_students')
         .select('subgroup_id, academy_subgroups(name)')
-        .eq('student_id', widget.user.id)
-        .maybeSingle();
+        .eq('student_id', widget.user.id);
 
-    if (subgroupResponse != null && subgroupResponse['academy_subgroups'] != null) {
-      subgroupName = subgroupResponse['academy_subgroups']['name'] ?? 'No subgroup';
+    if (subgroupResponse.isNotEmpty) {
+      subgroupNames = (subgroupResponse as List<dynamic>)
+          .map((row) => row['academy_subgroups']['name'] as String)
+          .toList();
     } else {
-      subgroupName = 'No subgroup';
+      subgroupNames = [];
     }
 
     setState(() => loading = false);
@@ -73,8 +74,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   Text('Academy:', style: Theme.of(context).textTheme.titleMedium),
                   Text(academyName, style: const TextStyle(fontSize: 20)),
                   const SizedBox(height: 32),
-                  Text('Subgroup:', style: Theme.of(context).textTheme.titleMedium),
-                  Text(subgroupName, style: const TextStyle(fontSize: 20)),
+                  Text('Subgroups:', style: Theme.of(context).textTheme.titleMedium),
+                  subgroupNames.isEmpty
+                      ? const Text('No subgroups', style: TextStyle(fontSize: 20))
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: subgroupNames.map((name) => Text(name, style: const TextStyle(fontSize: 20))).toList(),
+                        ),
                 ],
               ),
             ),

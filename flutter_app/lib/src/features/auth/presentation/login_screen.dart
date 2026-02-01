@@ -192,13 +192,53 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            // SizedBox(
-            //   width: double.maxFinite,
-            //   child: ElevatedButton(
-            //     onPressed: () => {}, // Implement forgot password functionality
-            //     child: const Text('Forgot Password?'),
-            //   ),
-            // ),
+            SizedBox(
+              width: double.maxFinite,
+              child: TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) {
+                      final forgotEmailController = TextEditingController();
+                      return AlertDialog(
+                        title: const Text('Reset Password'),
+                        content: TextField(
+                          controller: forgotEmailController,
+                          decoration: const InputDecoration(labelText: 'Enter your email'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              final email = forgotEmailController.text.trim();
+                              Navigator.of(dialogContext).pop();
+                              if (email.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your email.')));
+                                return;
+                              }
+                              setState(() => loading = true);
+                              try {
+                                await auth.resetPassword(email);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset email sent. Please check your inbox.'), backgroundColor: Colors.green));
+                              } catch (err) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send reset email: $err')));
+                              } finally {
+                                setState(() => loading = false);
+                              }
+                            },
+                            child: const Text('Send Reset Email'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: const Text('Forgot Password?'),
+              ),
+            ),
           ],
         ),
       ),
