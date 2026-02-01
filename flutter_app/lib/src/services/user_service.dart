@@ -33,4 +33,15 @@ class UserService extends DatabaseService{
   }
 
   // Add other user-specific operations
+  Future<void> deleteUserProfile(String userId, String role) async {
+    if (role == 'coach') {
+      await supabase.from('session_coaches').delete().eq('coach_id', userId);
+      await supabase.from('academy_coaches').delete().eq('coach_id', userId);
+    } else if (role == 'student') {
+      await supabase.from('session_attendance').delete().eq('student_id', userId);
+      await supabase.from('subgroup_students').delete().eq('student_id', userId);
+      await supabase.from('academy_students').delete().eq('student_id', userId);
+    }
+    await supabase.from('users').delete().eq('id', userId);
+  }
 }

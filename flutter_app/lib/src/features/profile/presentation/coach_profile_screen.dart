@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/models/user_model.dart';
 import 'package:flutter_app/src/services/academy_service.dart';
+import 'package:flutter_app/src/services/user_service.dart';
+import 'package:flutter_app/src/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
 class CoachProfileScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
   List<Map<String, dynamic>> subgroups = [];
   List<Map<String, dynamic>> unassignedStudents = [];
   bool loading = true;
+  bool deleting = false;
 
   @override
   void initState() {
@@ -234,6 +237,42 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
+  Future<void> _confirmDeleteProfile() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Profile'),
+          content: const Text('This will permanently delete your profile. Continue?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: deleting
+                  ? null
+                  : () async {
+                      setState(() => deleting = true);
+                      try {
+                        await UserService().deleteUserProfile(widget.user.id, widget.user.role);
+                        await AuthService().signOut();
+                        if (mounted) {
+                          context.go('/login');
+                        }
+                      } finally {
+                        if (mounted) setState(() => deleting = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSubgroupTile(String name, String subgroupId, Future<List<Map<String, dynamic>>> studentsFuture) {
     return Container(
       width: double.infinity,
@@ -377,6 +416,15 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                         academyService.fetchStudentsInSubgroup(subgroup['id']),
                       ),
                     ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: deleting ? null : _confirmDeleteProfile,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                      child: Text(deleting ? 'Deleting...' : 'Delete Profile'),
+                    ),
+                  ),
                   ],
                 ),
               ),
