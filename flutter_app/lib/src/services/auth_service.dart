@@ -26,9 +26,13 @@ class AuthService {
       throw Exception('User not found');
     }
 
-  // userId removed (unused)
+    // userId removed (unused)
     final userRole = user.userMetadata?['role'] as String?;
     return userRole;
+  }
+
+  Future<void> resetPassword(String email) async {
+    await supabase.auth.resetPasswordForEmail(email);
   }
 
   // Need to create user table in Supabase with corresponding columns
