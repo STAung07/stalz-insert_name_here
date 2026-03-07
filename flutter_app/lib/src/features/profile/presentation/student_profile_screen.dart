@@ -51,6 +51,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         .from('subgroup_students')
         .select('subgroup_id, academy_subgroups(name)')
         .eq('student_id', widget.user.id)
+        .limit(1)
         .maybeSingle();
 
     if (subgroupResponse != null && subgroupResponse['academy_subgroups'] != null) {
@@ -72,6 +73,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                backgroundColor: Color(0xFFCBD2FF),
+                foregroundColor: Colors.black,
+              ),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -81,6 +86,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       setState(() => deleting = true);
                       try {
                         await UserService().deleteUserProfile(widget.user.id, widget.user.role);
+                        await AuthService().deleteAuthAccount();
                         await AuthService().signOut();
                         if (mounted) {
                           context.go('/login');

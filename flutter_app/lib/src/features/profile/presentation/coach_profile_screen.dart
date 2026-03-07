@@ -247,6 +247,10 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                backgroundColor: Color(0xFFCBD2FF),
+                foregroundColor: Colors.black,
+              ),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -256,6 +260,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                       setState(() => deleting = true);
                       try {
                         await UserService().deleteUserProfile(widget.user.id, widget.user.role);
+                        await AuthService().deleteAuthAccount();
                         await AuthService().signOut();
                         if (mounted) {
                           context.go('/login');

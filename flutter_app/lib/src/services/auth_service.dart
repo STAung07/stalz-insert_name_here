@@ -85,8 +85,22 @@ class AuthService {
 
 
   Future<void> signOut() async {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut(scope: SignOutScope.global);
+    } on AuthException {
+      return;
+    }
   }
 
   User? get currentUser => supabase.auth.currentUser;
+
+  Future<void> deleteAuthAccount() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    try {
+      await supabase.functions.invoke('delete_auth_user', body: {'user_id': user.id});
+    } catch (_) {
+      return;
+    }
+  }
 }
