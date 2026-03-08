@@ -26,6 +26,7 @@ class AcademyService extends DatabaseService {
         .from(tableName)
         .select('academy_id')
         .eq(idColumnName, userId)
+        .limit(1)
         .maybeSingle();
 
     if (response == null) {

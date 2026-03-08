@@ -26,9 +26,13 @@ class AuthService {
       throw Exception('User not found');
     }
 
-  // userId removed (unused)
+    // userId removed (unused)
     final userRole = user.userMetadata?['role'] as String?;
     return userRole;
+  }
+
+  Future<void> resetPassword(String email) async {
+    await supabase.auth.resetPasswordForEmail(email);
   }
 
   // Need to create user table in Supabase with corresponding columns
@@ -85,8 +89,22 @@ class AuthService {
 
 
   Future<void> signOut() async {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut(scope: SignOutScope.global);
+    } on AuthException {
+      return;
+    }
   }
 
   User? get currentUser => supabase.auth.currentUser;
+
+  Future<void> deleteAuthAccount() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    try {
+      await supabase.functions.invoke('delete_auth_user', body: {'user_id': user.id});
+    } catch (_) {
+      return;
+    }
+  }
 }
